@@ -1,3 +1,5 @@
+![convsearch — search, ask, and reason over your own ChatGPT history, 100% locally](site/media/github-banner.png)
+
 # convsearch
 
 **Your ChatGPT history remembers what you decided. convsearch tells you what changed.**
