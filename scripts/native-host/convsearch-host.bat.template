@@ -1,0 +1,7 @@
+@echo off
+REM convsearch native messaging launcher (Windows).
+REM This is a TEMPLATE. The installer (scripts/install-native-host.ps1) generates the
+REM concrete convsearch-host.bat with __INTERPRETER__ replaced by the resolved command
+REM (e.g. `uv run --no-sync python` or a bare `python`) and __NATIVE_HOST_PY__ by the
+REM absolute path to native_host.py.
+__INTERPRETER__ "__NATIVE_HOST_PY__" %*

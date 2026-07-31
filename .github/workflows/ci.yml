@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# A read-only token is enough for everything here.
+permissions:
+  contents: read
+
+# A new push to the same branch makes the in-flight run irrelevant.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint and types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Ruff
+        run: uv run ruff check .
+
+      - name: Format
+        run: uv run ruff format --check .
+
+      - name: Mypy
+        run: uv run mypy src
+
+  test:
+    name: Tests (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Development happens on Windows while CI historically only ran Linux,
+        # which hides path-separator and encoding bugs. Both are tested now.
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Unit tests
+        run: uv run pytest -m "not real_model and not integration"
+
+  build:
+    name: Build and smoke-test the wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # A package that lints and type-checks perfectly but does not install is
+      # the classic first-release failure, so prove the artefact works.
+      - name: Build
+        run: uv build
+
+      - name: Install the wheel into a clean environment and run it
+        run: |
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/python -m pip install --quiet dist/*.whl
+          /tmp/smoke/bin/convsearch --help
+          /tmp/smoke/bin/python -c "import convsearch; print(convsearch.__name__)"
+
+      - name: Check package metadata
+        run: uv run --with twine python -m twine check dist/*
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*

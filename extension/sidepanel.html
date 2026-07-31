@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="sidepanel.css" />
+    <title>convsearch</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#view-region">Skip to content</a>
+
+    <div class="app-shell">
+      <nav class="rail" role="tablist" aria-orientation="vertical" aria-label="Views">
+        <button id="tab-home" class="tab rail-item" role="tab" aria-selected="true" aria-controls="view-home" data-view="home">
+          <span class="rail-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9.5h12V10"/><path d="M10 19.5V14h4v5.5"/></svg>
+          </span>
+          <span class="rail-label">Home</span>
+        </button>
+        <button id="tab-search" class="tab rail-item" role="tab" aria-selected="false" aria-controls="view-search" data-view="search" tabindex="-1">
+          <span class="rail-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6"/><path d="m20 20-4.6-4.6"/></svg>
+          </span>
+          <span class="rail-label">Ask</span>
+        </button>
+        <button id="tab-plan" class="tab rail-item" role="tab" aria-selected="false" aria-controls="view-plan" data-view="plan" tabindex="-1">
+          <span class="rail-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>
+          </span>
+          <span class="rail-label">Plan</span>
+        </button>
+        <button id="tab-tasks" class="tab rail-item" role="tab" aria-selected="false" aria-controls="view-tasks" data-view="tasks" tabindex="-1">
+          <span class="rail-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>
+          </span>
+          <span class="rail-label">Tasks</span>
+        </button>
+        <button id="tab-projects" class="tab rail-item" role="tab" aria-selected="false" aria-controls="view-projects" data-view="projects" tabindex="-1">
+          <span class="rail-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2-2h3.2l1.6 2H18a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>
+          </span>
+          <span class="rail-label">Projects</span>
+        </button>
+        <button id="tab-timeline" class="tab rail-item" role="tab" aria-selected="false" aria-controls="view-timeline" data-view="timeline" tabindex="-1">
+          <span class="rail-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+          </span>
+          <span class="rail-label">Timeline</span>
+        </button>
+        <button id="tab-memories" class="tab rail-item" role="tab" aria-selected="false" aria-controls="view-memories" data-view="memories" tabindex="-1">
+          <span class="rail-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4h11a1 1 0 0 1 1 1v14.2a.6.6 0 0 1-.94.5L12 16.4l-5.56 3.3a.6.6 0 0 1-.94-.5V5a1 1 0 0 1 1-1z"/></svg>
+          </span>
+          <span class="rail-label">Memories</span>
+        </button>
+        <button id="tab-review" class="tab rail-item" role="tab" aria-selected="false" aria-controls="view-review" data-view="review" tabindex="-1">
+          <span class="rail-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/></svg>
+          </span>
+          <span class="rail-label">Review</span>
+        </button>
+        <button id="tab-captures" class="tab rail-item" role="tab" aria-selected="false" aria-controls="view-captures" data-view="captures" tabindex="-1">
+          <span class="rail-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.6l1.2-1.8h6.4L16.4 6H18a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.2"/></svg>
+          </span>
+          <span class="rail-label">Captures</span>
+        </button>
+        <button id="tab-privacy" class="tab rail-item" role="tab" aria-selected="false" aria-controls="view-privacy" data-view="privacy" tabindex="-1">
+          <span class="rail-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 5 6.2v5.3c0 4.3 3 7.4 7 8.9 4-1.5 7-4.6 7-8.9V6.2z"/><path d="m9.2 12 1.9 1.9 3.7-3.9"/></svg>
+          </span>
+          <span class="rail-label">Privacy</span>
+        </button>
+        <button id="tab-status" class="tab rail-item" role="tab" aria-selected="false" aria-controls="view-status" data-view="status" tabindex="-1">
+          <span class="rail-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12.5h4l2.2-5.5 3.6 10 2.2-4.5H21"/></svg>
+          </span>
+          <span class="rail-label">Status</span>
+        </button>
+      </nav>
+
+      <div class="main-column">
+        <header class="main-header">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 100 100" width="20" height="20">
+                <defs>
+                  <mask id="cutmask" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+                    <rect width="100" height="100" fill="#fff" />
+                    <circle cx="58" cy="58" r="17" fill="#000" />
+                  </mask>
+                </defs>
+                <rect x="9" y="9" width="58" height="58" rx="16" fill="currentColor" opacity="0.4" />
+                <rect x="29" y="29" width="58" height="58" rx="16" fill="currentColor" mask="url(#cutmask)" />
+              </svg>
+            </span>
+            <span class="brand-name">convsearch</span>
+            <span id="conn-dot" class="conn-dot" title="Server status" aria-hidden="true"></span>
+          </div>
+
+          <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle light/dark theme" aria-pressed="false">
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.2A8 8 0 1 1 9.8 4 6.5 6.5 0 0 0 20 14.2z"/></svg>
+          </button>
+
+          <h1 id="view-title" class="view-title">Home</h1>
+        </header>
+
+        <main id="view-region" class="view-region">
+      <!-- ── Home ───────────────────────────────────────────────── -->
+      <section id="view-home" class="view" role="tabpanel" aria-labelledby="tab-home">
+        <form id="cmd-form" class="filter-bar">
+          <input
+            id="cmd-input"
+            type="text"
+            class="text-input"
+            placeholder="search &lt;query&gt; · ask &lt;question&gt; · find memories &lt;query&gt; · project &lt;name&gt; · rebuild index · status · help"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Command bar"
+          />
+          <p id="cmd-hint" class="line-status" role="status" aria-live="polite"></p>
+        </form>
+        <div id="home-output" class="output"></div>
+      </section>
+
+      <!-- ── Search ─────────────────────────────────────────────── -->
+      <section id="view-search" class="view" role="tabpanel" aria-labelledby="tab-search" hidden>
+        <form id="search-form" class="search-controls">
+          <input
+            id="search-input"
+            type="search"
+            class="text-input"
+            placeholder="Ask a question or search your ChatGPT history…"
+            autocomplete="off"
+            spellcheck="false"
+            role="combobox"
+            aria-expanded="false"
+            aria-autocomplete="list"
+            aria-controls="search-results"
+            aria-label="Ask a question or search your ChatGPT history"
+          />
+
+          <div class="segmented" role="radiogroup" aria-label="Result level">
+            <label class="seg"><input type="radio" name="level" value="conversation" checked /><span>Conversations</span></label>
+            <label class="seg"><input type="radio" name="level" value="segment" /><span>Segments</span></label>
+            <label class="seg"><input type="radio" name="level" value="passage" /><span>Passages</span></label>
+          </div>
+
+          <div class="control-row">
+            <label class="field">
+              <span class="field-label">Profile</span>
+              <select id="profile" class="select">
+                <option value="balanced">Balanced</option>
+                <option value="exact">Exact</option>
+                <option value="semantic">Semantic</option>
+              </select>
+            </label>
+            <label class="toggle"><input type="checkbox" id="branches" /> <span>Branches</span></label>
+            <label class="toggle"><input type="checkbox" id="explain" /> <span>Explain</span></label>
+            <button type="submit" id="ask-submit" class="btn btn-primary btn-sm ask-btn">Ask</button>
+          </div>
+
+          <p id="search-status" class="line-status" role="status" aria-live="polite"></p>
+        </form>
+
+        <!-- Grounded answer, pinned above the results; filled only on explicit submit. -->
+        <div id="answer-slot" class="answer-slot" aria-live="polite" hidden></div>
+
+        <div id="search-results" class="results" role="listbox" aria-label="Search results"></div>
+      </section>
+
+      <!-- ── Plan ───────────────────────────────────────────────── -->
+      <section id="view-plan" class="view" role="tabpanel" aria-labelledby="tab-plan" hidden>
+        <form id="plan-form" class="ask-controls">
+          <textarea
+            id="plan-input"
+            class="text-input textarea"
+            rows="2"
+            placeholder="Ask the planner a question…"
+            aria-label="Ask the planner a question"
+          ></textarea>
+          <button type="submit" id="plan-submit" class="btn btn-primary">Plan</button>
+        </form>
+        <div id="plan-output" class="output"></div>
+      </section>
+
+      <!-- ── Tasks ──────────────────────────────────────────────── -->
+      <section id="view-tasks" class="view" role="tabpanel" aria-labelledby="tab-tasks" hidden>
+        <div class="filter-bar">
+          <div class="segmented" role="radiogroup" aria-label="Task state">
+            <label class="seg"><input type="radio" name="task-state" value="open" checked /><span>Open</span></label>
+            <label class="seg"><input type="radio" name="task-state" value="completed" /><span>Completed</span></label>
+            <label class="seg"><input type="radio" name="task-state" value="all" /><span>All</span></label>
+          </div>
+          <div class="filter-row">
+            <label class="field">
+              <span class="field-label">Project</span>
+              <select id="task-project" class="select"><option value="">All projects</option></select>
+            </label>
+            <label class="toggle"><input type="checkbox" id="task-evidence" /> <span>Expand evidence</span></label>
+          </div>
+        </div>
+        <div id="tasks-output" class="output"></div>
+      </section>
+
+      <!-- ── Memories ───────────────────────────────────────────── -->
+      <section id="view-memories" class="view" role="tabpanel" aria-labelledby="tab-memories" hidden>
+        <div class="filter-bar">
+          <input
+            id="mem-query"
+            type="search"
+            class="text-input"
+            placeholder="Filter memories…"
+            autocomplete="off"
+            aria-label="Filter memories"
+          />
+          <div class="filter-row">
+            <label class="field">
+              <span class="field-label">Kind</span>
+              <select id="mem-kind" class="select"><option value="">All kinds</option></select>
+            </label>
+            <label class="field">
+              <span class="field-label">Status</span>
+              <select id="mem-status" class="select"><option value="">All statuses</option></select>
+            </label>
+            <label class="field">
+              <span class="field-label">Project</span>
+              <input id="mem-project" type="text" class="text-input" placeholder="any" autocomplete="off" aria-label="Project" />
+            </label>
+          </div>
+        </div>
+        <div id="memories-output" class="output"></div>
+      </section>
+
+      <!-- ── Review ─────────────────────────────────────────────── -->
+      <section id="view-review" class="view" role="tabpanel" aria-labelledby="tab-review" hidden>
+        <div class="filter-bar">
+          <div class="filter-row">
+            <label class="field">
+              <span class="field-label">Kind</span>
+              <select id="review-kind" class="select"><option value="">All kinds</option></select>
+            </label>
+            <label class="field">
+              <span class="field-label">Project</span>
+              <input id="review-project" type="text" class="text-input" placeholder="any" autocomplete="off" aria-label="Project" />
+            </label>
+            <label class="toggle"><input type="checkbox" id="review-include-reviewed" /> <span>Include reviewed</span></label>
+          </div>
+        </div>
+        <div id="review-output" class="output"></div>
+      </section>
+
+      <!-- ── Captures ───────────────────────────────────────────── -->
+      <section id="view-captures" class="view" role="tabpanel" aria-labelledby="tab-captures" hidden>
+        <div class="filter-bar">
+          <div class="segmented" role="radiogroup" aria-label="Capture source">
+            <label class="seg"><input type="radio" name="capture-source" value="all" checked /><span>All</span></label>
+            <label class="seg"><input type="radio" name="capture-source" value="live" /><span>Live</span></label>
+            <label class="seg"><input type="radio" name="capture-source" value="import" /><span>Imported</span></label>
+          </div>
+          <label class="toggle"><input type="checkbox" id="captures-problems" /> <span>Problems only</span></label>
+        </div>
+        <div id="captures-output" class="output"></div>
+      </section>
+
+      <!-- ── Privacy ────────────────────────────────────────────── -->
+      <section id="view-privacy" class="view" role="tabpanel" aria-labelledby="tab-privacy" hidden>
+        <div id="privacy-output" class="output"></div>
+      </section>
+
+      <!-- ── Projects ───────────────────────────────────────────── -->
+      <section id="view-projects" class="view" role="tabpanel" aria-labelledby="tab-projects" hidden>
+        <div id="projects-output" class="output"></div>
+      </section>
+
+      <!-- ── Timeline ───────────────────────────────────────────── -->
+      <section id="view-timeline" class="view" role="tabpanel" aria-labelledby="tab-timeline" hidden>
+        <form id="timeline-form" class="filter-bar">
+          <input
+            id="timeline-query"
+            type="search"
+            class="text-input"
+            placeholder="Topic, e.g. pricing model, database choice…"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Timeline topic"
+          />
+          <div class="filter-row">
+            <label class="field">
+              <span class="field-label">Project</span>
+              <input id="timeline-project" type="text" class="text-input" placeholder="any" autocomplete="off" aria-label="Project" />
+            </label>
+            <button type="submit" id="timeline-submit" class="btn btn-primary btn-sm">Run</button>
+          </div>
+          <p id="timeline-hint" class="line-status" role="status" aria-live="polite"></p>
+        </form>
+        <div id="timeline-output" class="output"></div>
+      </section>
+
+      <!-- ── Status ─────────────────────────────────────────────── -->
+      <section id="view-status" class="view" role="tabpanel" aria-labelledby="tab-status" hidden>
+        <div id="status-output" class="output"></div>
+      </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

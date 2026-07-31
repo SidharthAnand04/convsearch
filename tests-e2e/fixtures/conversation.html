@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!-- Real chatgpt.com titles are "<conversation title> - ChatGPT". -->
+    <title>__TITLE__ - ChatGPT</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 0; display: flex; }
+      nav { width: 240px; border-right: 1px solid #ddd; padding: 12px; }
+      main { flex: 1; padding: 24px; max-width: 720px; }
+      article { padding: 12px 0; border-bottom: 1px solid #eee; }
+    </style>
+  </head>
+  <body>
+    <!--
+      Faithful-enough mimic of the chatgpt.com conversation DOM. Every selector the
+      contract's table names appears here, in the same nesting real ChatGPT uses:
+        - turns are [data-testid^="conversation-turn"] wrappers
+        - [data-message-author-role] and [data-message-id] sit on a DESCENDANT of the turn
+        - message body is a .markdown block
+        - the active sidebar entry is an <a> whose href ends /c/<conversation id>
+    -->
+    <nav aria-label="Chat history">
+      <a href="/c/__CONV_ID__" aria-current="page">__TITLE__</a>
+      <a href="/c/11111111-2222-3333-4444-555555555555">Some other conversation</a>
+    </nav>
+
+    <main>
+      <article data-testid="conversation-turn-2">
+        <div data-message-author-role="user" data-message-id="msg-user-0001">
+          <div class="markdown">
+            <p>
+              I want to search my old ChatGPT conversations offline. What retrieval
+              architecture should a local conversation search tool use?
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article data-testid="conversation-turn-3">
+        <div data-message-author-role="assistant" data-message-id="msg-asst-0002">
+          <div class="markdown">
+            <p>
+              Use hybrid retrieval: a BM25 lexical index over passages plus dense
+              embeddings, fused with reciprocal rank fusion. Segment each conversation
+              into passages first so a long thread does not collapse into one vector.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <!--
+        A turn that renders no text at all — ChatGPT emits these while a response is
+        still being allocated. Extraction must skip it and keep `order` contiguous.
+      -->
+      <article data-testid="conversation-turn-4">
+        <div data-message-author-role="assistant" data-message-id="msg-asst-empty">
+          <div class="markdown"></div>
+        </div>
+      </article>
+
+      <article data-testid="conversation-turn-5">
+        <div data-message-author-role="user" data-message-id="msg-user-0003">
+          <div class="markdown">
+            <p>How do I keep the index fresh without blocking the capture request?</p>
+          </div>
+        </div>
+      </article>
+
+      <article data-testid="conversation-turn-6">
+        <div data-message-author-role="assistant" data-message-id="msg-asst-0004">
+          <div class="markdown">
+            <p>
+              Mark the vector index stale on write and rebuild it out of band. Embedding
+              inline would block the capture POST for seconds.
+            </p>
+          </div>
+        </div>
+      </article>
+    </main>
+  </body>
+</html>

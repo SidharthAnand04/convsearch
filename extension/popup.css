@@ -1,0 +1,488 @@
+/*
+ * convsearch popup + options — consumes the unified token system from theme.css.
+ * No palette is defined here: colours, fonts, radii, spacing and the focus ring all come
+ * from the shared tokens so the popup reads in the same visual language as the side panel.
+ * theme.css defaults to dark; popup.js mirrors the panel's stored theme onto <html> on load.
+ * Mono (--font-mono) is reserved for code / IDs / keycaps; everything else is --font-sans.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+/*
+ * An author `display` rule beats the UA stylesheet's `[hidden] { display: none }`, so any
+ * element we style with display:flex/grid would stay visible even while hidden. The panels
+ * below are toggled via the hidden attribute, so make it win.
+ */
+[hidden] {
+  display: none !important;
+}
+
+body {
+  width: 420px;
+  max-height: 560px;
+  margin: 0;
+  overflow-y: auto;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: var(--sp-2);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+#search-form {
+  display: flex;
+  gap: var(--sp-1);
+}
+
+#query {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  color: var(--text);
+  font: inherit;
+}
+
+#query:focus {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+button {
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+button:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* The primary submit action carries the CTA accent so it reads as the main affordance. */
+#submit {
+  border-color: var(--accent);
+  background: var(--accent-cta);
+  color: var(--accent-contrast);
+}
+
+#submit:hover:not(:disabled) {
+  background: var(--cta-strong);
+}
+
+button.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  text-decoration: underline;
+}
+
+button.link:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+/* The `?` affordance next to Search: same hit area as a button, quieter. */
+.icon-button {
+  flex-shrink: 0;
+  width: 30px;
+  padding: var(--sp-1) 0;
+  background: var(--bg-raised);
+  color: var(--text-muted);
+  font-weight: 700;
+  text-align: center;
+}
+
+.icon-button[aria-expanded="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+}
+
+.controls label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.status {
+  text-align: right;
+}
+
+.status.error {
+  color: var(--bad);
+}
+
+/* ---- keyboard help ---- */
+
+.help {
+  padding: var(--sp-2);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-raised);
+  font-size: var(--fs-xs);
+}
+
+.help-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px var(--sp-3);
+  margin: 0;
+}
+
+.help-list dt {
+  white-space: nowrap;
+}
+
+.help-list dd {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+kbd {
+  display: inline-block;
+  min-width: 15px;
+  padding: 1px 4px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  text-align: center;
+}
+
+.help-foot {
+  margin: var(--sp-2) 0 0;
+  color: var(--text-muted);
+}
+
+.help-foot code {
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  background: var(--code-bg);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  user-select: all;
+}
+
+/* ---- capture panel ---- */
+
+.capture {
+  padding: var(--sp-2);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.capture-line {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.dot.online {
+  background: var(--ok);
+}
+
+.dot.offline {
+  background: var(--bad);
+}
+
+.dot.warn {
+  background: var(--warn);
+}
+
+.capture-summary {
+  font-weight: 600;
+}
+
+.capture-detail {
+  margin-top: 2px;
+  padding-left: 13px;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+}
+
+.capture-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--warn);
+  border-radius: var(--radius-md);
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: var(--fs-xs);
+}
+
+.capture-alert button {
+  flex-shrink: 0;
+  padding: 4px var(--sp-2);
+  font-size: var(--fs-xs);
+}
+
+/* ---- results ---- */
+
+main {
+  padding: var(--sp-1) var(--sp-2) var(--sp-3);
+}
+
+/*
+ * As-you-type search keeps the previous results on screen and dims them rather than
+ * blanking the list, so the popup never flashes empty between keystrokes.
+ */
+#result-list.stale {
+  opacity: 0.45;
+  transition: opacity 90ms linear;
+}
+
+.result {
+  position: relative;
+  padding: var(--sp-2) var(--sp-1) var(--sp-2) 4px;
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.result:last-child {
+  border-bottom: 0;
+}
+
+/*
+ * The selected row is marked three ways on purpose: a left bar, a tinted background and a
+ * visible caret glyph. Colour alone would disappear under forced-colors and for anyone who
+ * cannot distinguish the tint. `aria-selected` on the row plus `aria-activedescendant` on
+ * the query box carry the same information to assistive tech.
+ */
+.result.selected {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.result.selected .result-title {
+  text-decoration: underline;
+}
+
+.result-marker {
+  flex-shrink: 0;
+  width: 9px;
+  margin-right: 1px;
+  color: var(--accent);
+  font-weight: 700;
+  visibility: hidden;
+}
+
+.result.selected .result-marker {
+  visibility: visible;
+}
+
+@media (forced-colors: active) {
+  .result.selected {
+    outline: 2px solid Highlight;
+    outline-offset: -1px;
+  }
+}
+
+.result-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-1);
+}
+
+.result-head .result-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-title {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.result-title:hover {
+  text-decoration: underline;
+}
+
+.result-meta {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.passage {
+  margin-top: var(--sp-1);
+  padding-left: var(--sp-2);
+  border-left: 2px solid var(--border);
+  color: var(--text-muted);
+}
+
+.passage .role {
+  display: inline-block;
+  margin-right: 5px;
+  padding: 0 5px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+  color: var(--text);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+}
+
+.passage.alternate .role::after {
+  content: " · branch";
+}
+
+/* ---- empty / error states ---- */
+
+.empty {
+  padding: var(--sp-5) 4px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.empty .empty-title {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.empty code {
+  display: block;
+  margin-top: var(--sp-2);
+  padding: var(--sp-1);
+  border-radius: var(--radius-sm);
+  background: var(--code-bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  word-break: break-all;
+}
+
+.empty button {
+  margin-top: var(--sp-2);
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--sp-2);
+  border-top: 1px solid var(--border);
+}
+
+/* ---- options page (shares this stylesheet via body.options) ---- */
+
+body.options {
+  width: auto;
+  max-width: 560px;
+  max-height: none;
+  padding: var(--sp-4);
+}
+
+body.options h1 {
+  margin: 0 0 4px;
+  font-size: var(--fs-lg);
+}
+
+body.options h2 {
+  margin: var(--sp-5) 0 4px;
+  font-size: var(--fs-sm);
+}
+
+body.options p {
+  margin: 4px 0 var(--sp-2);
+  color: var(--text-muted);
+}
+
+body.options .row {
+  display: flex;
+  gap: var(--sp-1);
+}
+
+body.options input[type="url"] {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  color: var(--text);
+  font: inherit;
+}
+
+body.options input[type="url"]:focus {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+body.options .toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  cursor: pointer;
+}
+
+body.options .status {
+  display: block;
+  margin-top: var(--sp-2);
+  text-align: left;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+body.options .status.error {
+  color: var(--bad);
+}

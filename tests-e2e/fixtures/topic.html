@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>__TITLE__ - ChatGPT</title>
+  </head>
+  <body>
+    <!--
+      Same DOM shape as conversation.html, but every text node is injected via tokens.
+
+      That matters: `passages.content_hash` is GLOBALLY UNIQUE with INSERT OR IGNORE, so
+      two conversations containing byte-identical prose silently collapse into a single
+      passage row. Any test that stores more than one conversation must therefore give
+      each of them distinct body text, which the fixed text in conversation.html cannot do.
+    -->
+    <nav aria-label="Chat history">
+      <a href="/c/__CONV_ID__" aria-current="page">__TITLE__</a>
+    </nav>
+
+    <main>
+      <article data-testid="conversation-turn-2">
+        <div data-message-author-role="user" data-message-id="__CONV_ID__-u1">
+          <div class="markdown"><p>__ASK__</p></div>
+        </div>
+      </article>
+
+      <article data-testid="conversation-turn-3">
+        <div data-message-author-role="assistant" data-message-id="__CONV_ID__-a1">
+          <div class="markdown"><p>__REPLY__</p></div>
+        </div>
+      </article>
+    </main>
+  </body>
+</html>

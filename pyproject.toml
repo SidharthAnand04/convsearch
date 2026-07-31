@@ -1,0 +1,92 @@
+[build-system]
+# >=1.27 is required for PEP 639 `license` / `license-files` support.
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "convsearch"
+version = "0.1.0"
+description = "Local-first ChatGPT conversation search"
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Sidharth Anand", email = "sanand12@illinois.edu" }]
+keywords = ["chatgpt", "search", "rag", "local-first", "embeddings", "privacy"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: End Users/Desktop",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Text Processing :: Indexing",
+  "Typing :: Typed",
+]
+dependencies = [
+  "numpy>=1.26,<3",
+  "pydantic>=2.13,<3",
+  "PyYAML>=6,<7",
+  "rich>=13,<15",
+  "typer>=0.26,<1",
+]
+
+[project.optional-dependencies]
+ml = [
+  "faiss-cpu>=1.14,<2",
+  "sentence-transformers>=3,<6",
+]
+llm = [
+  "anthropic>=0.68,<1",
+]
+
+[project.urls]
+Homepage = "https://convsearch.vercel.app"
+Repository = "https://github.com/SidharthAnand04/convsearch"
+Issues = "https://github.com/SidharthAnand04/convsearch/issues"
+Changelog = "https://github.com/SidharthAnand04/convsearch/blob/main/CHANGELOG.md"
+
+[project.scripts]
+convsearch = "convsearch.cli.app:app"
+
+[dependency-groups]
+dev = [
+  "mypy>=1.10,<3",
+  "pytest>=8,<10",
+  "ruff>=0.11,<1",
+  "types-PyYAML>=6,<7",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/convsearch"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+  "integration: tests that exercise the deterministic end-to-end route",
+  "real_model: tests that download or load optional ML models",
+]
+pythonpath = ["src"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["convsearch"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+exclude = ["tmp"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4", "RUF"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["convsearch"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

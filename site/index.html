@@ -1,0 +1,1698 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>convsearch — search your own ChatGPT history, locally</title>
+<meta name="description" content="convsearch is a local-first search engine for your ChatGPT history. A Chrome extension captures conversations you open; a local server indexes and searches them with hybrid keyword + semantic retrieval and answers questions with citations. Nothing leaves your machine.">
+<link rel="canonical" href="https://convsearch.vercel.app/">
+<meta name="author" content="Sidharth Anand">
+<meta name="theme-color" content="#070417">
+
+<!-- Open Graph (text-based preview; no external image required) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="convsearch">
+<meta property="og:url" content="https://convsearch.vercel.app/">
+<meta property="og:title" content="convsearch — search, ask, and reason over your own ChatGPT history, locally">
+<meta property="og:description" content="A Chrome extension captures the ChatGPT conversations you open; a local Python server indexes them for hybrid keyword + semantic search and cited question-answering. No account, no required API key, nothing leaves your machine.">
+<meta property="og:image" content="https://convsearch.vercel.app/media/og-card.png">
+<meta property="og:locale" content="en_US">
+
+<!-- Twitter / X (large image card) -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="convsearch — search your ChatGPT history, locally">
+<meta name="twitter:description" content="Local-first search, ask, and memory over your own ChatGPT history. Hybrid keyword + semantic retrieval on your machine — no account, no required API key.">
+<meta name="twitter:image" content="https://convsearch.vercel.app/media/og-card.png">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cmask id='m' maskUnits='userSpaceOnUse' x='0' y='0' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23fff'/%3E%3Ccircle cx='58' cy='58' r='17' fill='%23000'/%3E%3C/mask%3E%3C/defs%3E%3Crect x='9' y='9' width='58' height='58' fill='%239d8cec' opacity='0.35'/%3E%3Crect x='29' y='29' width='58' height='58' fill='%239d8cec' mask='url(%23m)'/%3E%3C/svg%3E">
+<!-- Required by Lenis. Without `html.lenis, html.lenis body { height: auto }`
+     the page does not scroll correctly once Lenis is instantiated below. -->
+<link rel="stylesheet" href="vendor/lenis.css">
+
+<style>
+  /* ============================================================
+     convsearch — landing page
+     Design language: Lenis (darkroom.engineering) — ultra-minimal,
+     big grotesque display type with tight tracking, a monospace for
+     labels, hairline rules, sharp corners, smooth scroll + restrained
+     scroll-reveal. Reskinned to a dark-first purple system:
+       --text #dad4f8 · --background #070417 · --primary #9d8cec
+       --secondary #8e1884 · --accent #de3a90
+     Primary purple drives links/buttons/focus; pink accent lights up
+     the hero highlight and key CTAs; magenta-purple supports.
+     ============================================================ */
+
+  :root {
+    color-scheme: dark light;
+
+    /* spacing */
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 16px;
+    --sp-4: 24px;
+    --sp-5: 40px;
+    --sp-6: 64px;
+    --sp-7: 96px;
+    --sp-8: 140px;
+
+    /* type scale — dramatic contrast, tight tracking */
+    --fs-mono: clamp(0.7rem, 0.66rem + 0.16vw, 0.78rem);
+    --fs-sm: clamp(0.82rem, 0.79rem + 0.14vw, 0.9rem);
+    --fs-base: clamp(1rem, 0.96rem + 0.2vw, 1.08rem);
+    --fs-md: clamp(1.2rem, 1.08rem + 0.5vw, 1.5rem);
+    --fs-lg: clamp(1.7rem, 1.3rem + 1.7vw, 2.8rem);
+    --fs-xl: clamp(2.4rem, 1.5rem + 3.6vw, 4.4rem);
+    --fs-display: clamp(3rem, 1.1rem + 8.4vw, 8.5rem);
+
+    /* grotesque display + neutral sans + mono */
+    --font-sans: "Helvetica Neue", Helvetica, "Inter", "Segoe UI", Roboto,
+      -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono",
+      Menlo, Consolas, "Liberation Mono", monospace;
+
+    --edge: 1400px;      /* max content width */
+    --gut: clamp(20px, 5vw, 80px);
+  }
+
+  /* ---- Brand palette (exact base hex, exposed as custom properties) ----
+       --text #dad4f8   --background #070417   --primary #9d8cec
+       --secondary #8e1884   --accent #de3a90                        ---- */
+
+  /* ---- Dark theme (DEFAULT) — near-black indigo, lavender ink ---- */
+  :root,
+  :root[data-theme="dark"] {
+    --text: #dad4f8;
+    --background: #070417;
+    --primary: #9d8cec;
+    --secondary: #8e1884;
+    --accent: #de3a90;
+
+    --paper: #070417;
+    --panel: #141031;
+    --sunken: #0d0a24;
+    --ink: #dad4f8;
+    --muted: rgba(218, 212, 248, 0.64);
+    --faint: rgba(218, 212, 248, 0.42);
+    --line: rgba(157, 140, 236, 0.14);
+    --line-2: rgba(157, 140, 236, 0.30);
+    --accent-2: #b9abf5;
+    --on-accent: #0a0620;
+    --accent-soft: rgba(157, 140, 236, 0.16);
+    --warn: #f2b45a;
+    --warn-bg: rgba(242, 180, 90, 0.12);
+    --dot-online: #59d499;
+    --dot-warn: #f2b45a;
+  }
+
+  /* ---- Light theme (opt-in) — soft lavender-white, indigo ink, same purple accents ---- */
+  :root[data-theme="light"] {
+    --text: #1a1533;
+    --background: #f5f3fb;
+    --primary: #6f5bd6;
+    --secondary: #8e1884;
+    --accent: #c81f7d;
+
+    --paper: #f5f3fb;
+    --panel: #ffffff;
+    --sunken: #eceaf6;
+    --ink: #1a1533;
+    --muted: rgba(26, 21, 51, 0.66);
+    --faint: rgba(26, 21, 51, 0.48);
+    --line: rgba(111, 91, 214, 0.22);
+    --line-2: rgba(111, 91, 214, 0.40);
+    --accent-2: #5a45c4;
+    --on-accent: #ffffff;
+    --accent-soft: rgba(157, 140, 236, 0.18);
+    --warn: #9a6300;
+    --warn-bg: #f4ecd8;
+    --dot-online: #1f9d63;
+    --dot-warn: #b07d1b;
+  }
+
+  /* Dark is the default palette (see :root above); no OS-based swap needed. */
+
+  /* Always-dark elevated panel (how-it-works, CTA), regardless of active theme */
+  .invert {
+    --primary: #b9abf5;
+    --secondary: #d38fce;
+    --accent: #f26fb0;
+    --paper: #0b0722;
+    --panel: #151134;
+    --sunken: #0a0620;
+    --ink: #ece8ff;
+    --muted: rgba(236, 232, 255, 0.66);
+    --faint: rgba(236, 232, 255, 0.44);
+    --line: rgba(157, 140, 236, 0.18);
+    --line-2: rgba(157, 140, 236, 0.34);
+    --accent-2: #cabffa;
+    --on-accent: #0a0620;
+    --accent-soft: rgba(157, 140, 236, 0.20);
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  * , *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    line-height: 1.5;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    transition: background-color .3s ease, color .3s ease;
+  }
+  img, svg { max-width: 100%; display: block; }
+
+  h1, h2, h3, h4 {
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    margin: 0;
+  }
+  p { margin: 0 0 var(--sp-3); color: var(--muted); max-width: 64ch; }
+  a { color: inherit; }
+
+  code, kbd {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    background: var(--sunken);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 0.08em 0.4em;
+    color: var(--ink);
+  }
+
+  /* ---- focus ---- */
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+    border-radius: 0;
+  }
+
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: var(--gut); top: -60px;
+    background: var(--ink);
+    color: var(--paper);
+    padding: var(--sp-2) var(--sp-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    z-index: 200;
+    transition: top .18s ease;
+  }
+  .skip-link:focus { top: var(--sp-3); }
+
+  /* ---- shared layout ---- */
+  .wrap {
+    max-width: var(--edge);
+    margin: 0 auto;
+    padding-left: var(--gut);
+    padding-right: var(--gut);
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ---- Header ---- */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--paper) 82%, transparent);
+    backdrop-filter: saturate(120%) blur(10px);
+    -webkit-backdrop-filter: saturate(120%) blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .site-header .wrap {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    height: 68px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    text-decoration: none;
+    margin-right: auto;
+    background: linear-gradient(92deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .brand .mark { width: 22px; height: 22px; flex: none; color: var(--primary); -webkit-text-fill-color: var(--primary); }
+
+  .site-nav { display: flex; align-items: center; gap: var(--sp-4); }
+  .nav-links { display: flex; gap: var(--sp-4); }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 0;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: "";
+    position: absolute; left: 0; bottom: -2px;
+    width: 0; height: 1px;
+    background: var(--ink);
+    transition: width .22s ease;
+  }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-links a:hover::after { width: 100%; }
+  @media (max-width: 1040px) { .nav-links { display: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .nav-links a::after { transition: none; }
+    .skip-link { transition: none; }
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 500;
+    padding: 0.7em 1.1em;
+    border: 1px solid var(--line-2);
+    background: transparent;
+    color: var(--ink);
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: 0;
+    line-height: 1;
+    transition: background-color .18s ease, color .18s ease, border-color .18s ease;
+  }
+  .btn:hover { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+  .btn-primary {
+    background: linear-gradient(120deg, var(--primary), var(--accent));
+    border-color: transparent;
+    color: var(--on-accent);
+    font-weight: 600;
+    box-shadow: 0 0 0 1px rgba(157, 140, 236, 0.45), 0 8px 26px -10px rgba(222, 58, 144, 0.6);
+  }
+  .btn-primary:hover {
+    background: linear-gradient(120deg, var(--accent), var(--secondary));
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 0 0 1px rgba(222, 58, 144, 0.6), 0 12px 30px -8px rgba(222, 58, 144, 0.72);
+  }
+  .btn-icon { padding: 0.6em; line-height: 0; }
+  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+
+  .theme-toggle svg { width: 17px; height: 17px; }
+  /* Dark is default → show the moon; light opt-in shows the sun */
+  .theme-toggle .icon-sun { display: none; }
+  .theme-toggle .icon-moon { display: block; }
+  :root[data-theme="light"] .theme-toggle .icon-sun { display: block; }
+  :root[data-theme="light"] .theme-toggle .icon-moon { display: none; }
+
+  /* ---- Sections ---- */
+  section { padding: var(--sp-8) 0; border-top: 1px solid var(--line); }
+  .section-head { max-width: 78ch; margin-bottom: var(--sp-6); }
+  .eyebrow {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.8em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 var(--sp-4);
+  }
+  .eyebrow .idx { color: var(--primary); }
+  .eyebrow::before {
+    content: "";
+    width: 28px; height: 1px;
+    background: linear-gradient(90deg, var(--primary), transparent);
+    align-self: center;
+  }
+  h2.section-title {
+    font-size: var(--fs-lg);
+    letter-spacing: -0.035em;
+    margin-bottom: var(--sp-4);
+    max-width: 20ch;
+  }
+  .section-head p { font-size: var(--fs-md); color: var(--muted); max-width: 60ch; }
+
+  /* ---- Hero ---- */
+  .hero { padding-top: clamp(60px, 9vh, 120px); padding-bottom: var(--sp-8); border-top: none; }
+  .hero .eyebrow { margin-bottom: var(--sp-5); }
+  .hero h1 {
+    font-size: var(--fs-display);
+    letter-spacing: -0.045em;
+    line-height: 0.92;
+    max-width: 15ch;
+    margin-bottom: var(--sp-5);
+  }
+  .hero h1 .thin { font-weight: 300; color: var(--muted); }
+  .hero h1 em {
+    font-style: normal;
+    background: linear-gradient(100deg, var(--primary) 0%, var(--accent) 52%, var(--secondary) 115%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .tagline {
+    font-size: var(--fs-md);
+    color: var(--muted);
+    max-width: 58ch;
+    line-height: 1.42;
+  }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-6); }
+
+  .hero-facts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: var(--sp-8);
+    border-top: 1px solid var(--line);
+  }
+  .fact {
+    padding: var(--sp-4) var(--sp-4) var(--sp-4) 0;
+    border-right: 1px solid var(--line);
+  }
+  .fact:last-child { border-right: none; padding-right: 0; }
+  .fact .n { font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--primary); letter-spacing: 0.1em; }
+  .fact strong { display: block; font-size: var(--fs-md); letter-spacing: -0.02em; margin: var(--sp-3) 0 var(--sp-2); font-weight: 600; }
+  .fact span { color: var(--faint); font-size: var(--fs-sm); }
+  @media (max-width: 760px) {
+    .hero-facts { grid-template-columns: 1fr; }
+    .fact { border-right: none; border-bottom: 1px solid var(--line); padding: var(--sp-4) 0; }
+    .fact:last-child { border-bottom: none; }
+  }
+
+  /* ---- Feature grid ---- */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+  .feature {
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: var(--sp-5);
+    position: relative;
+    transition: background-color .2s ease;
+  }
+  .feature:hover { background: var(--panel); }
+  .feature .fnum { font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--primary); letter-spacing: 0.1em; }
+  .feature h3 { font-size: var(--fs-md); letter-spacing: -0.025em; margin: var(--sp-4) 0 var(--sp-3); font-weight: 600; }
+  .feature p { font-size: var(--fs-sm); color: var(--muted); margin: 0; max-width: 42ch; }
+  @media (max-width: 900px) { .feature-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .feature-grid { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { .feature { transition: none; } }
+
+  /* ---- How it works ---- */
+  .flow-diagram {
+    width: 100%;
+    height: auto;
+    margin: var(--sp-4) 0 var(--sp-6);
+    border: 1px solid var(--line);
+    background: var(--panel);
+    padding: var(--sp-5);
+  }
+  .flow-diagram text { fill: var(--ink); font-family: var(--font-sans); }
+  .flow-diagram .muted { fill: var(--faint); }
+  .flow-diagram .accent-fill { fill: var(--accent-soft); }
+  .flow-diagram .box-stroke { stroke: var(--line-2); }
+  .flow-diagram .arrow { stroke: var(--faint); }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  .step { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: var(--sp-5); }
+  .step .step-num { font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--primary); letter-spacing: 0.1em; }
+  .step h3 { font-size: var(--fs-md); letter-spacing: -0.02em; margin: var(--sp-4) 0 var(--sp-3); font-weight: 600; }
+  .step p { font-size: var(--fs-sm); margin: 0; }
+  @media (max-width: 820px) { .steps { grid-template-columns: 1fr; } }
+
+  /* ---- Two column ---- */
+  .cols-2 {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(32px, 6vw, 88px);
+    align-items: start;
+  }
+  @media (max-width: 900px) { .cols-2 { grid-template-columns: 1fr; gap: var(--sp-5); } }
+
+  .list-check { list-style: none; margin: 0; padding: 0; display: grid; }
+  .list-check li {
+    display: flex;
+    gap: var(--sp-3);
+    align-items: flex-start;
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    padding: var(--sp-4) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .list-check li:first-child { border-top: 1px solid var(--line); }
+  .list-check svg { flex: none; width: 18px; height: 18px; margin-top: 0.1em; color: var(--primary); }
+  .list-check strong { color: var(--ink); font-weight: 600; }
+
+  /* ---- Pipeline ---- */
+  .pipeline {
+    display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center;
+    margin: var(--sp-4) 0 var(--sp-5);
+    font-family: var(--font-mono); font-size: var(--fs-mono);
+  }
+  .pipeline .node {
+    border: 1px solid var(--line-2);
+    background: var(--sunken);
+    padding: 0.7em 1em;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+  }
+  .pipeline .sep { color: var(--primary); }
+
+  .callout {
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--primary);
+    background: var(--panel);
+    padding: var(--sp-4);
+    margin: var(--sp-4) 0;
+  }
+  .callout p { font-size: var(--fs-sm); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout.warn { border-left-color: var(--warn); }
+
+  pre {
+    margin: 0 0 var(--sp-3);
+    overflow-x: auto;
+    background: var(--sunken);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--primary);
+    padding: var(--sp-4);
+  }
+  pre code { background: none; border: none; padding: 0; font-size: var(--fs-sm); white-space: pre; color: var(--ink); }
+
+  table { border-collapse: collapse; width: 100%; min-width: 480px; font-size: var(--fs-sm); }
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); }
+  th, td { text-align: left; padding: var(--sp-3); border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    background: var(--sunken); color: var(--faint); font-weight: 500;
+    font-family: var(--font-mono); font-size: var(--fs-mono);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td code { white-space: nowrap; }
+
+  /* ---- Side panel mock ---- */
+  .panel-frame-wrap { display: flex; justify-content: center; }
+  .panel-mock {
+    width: 100%; max-width: 420px;
+    background: var(--panel);
+    border: 1px solid var(--line-2);
+    overflow: hidden;
+    font-size: var(--fs-sm);
+  }
+  .panel-titlebar {
+    display: flex; align-items: center; gap: var(--sp-2);
+    padding: var(--sp-3); border-bottom: 1px solid var(--line); background: var(--sunken);
+  }
+  .panel-titlebar .mark { width: 15px; height: 15px; color: var(--primary); }
+  .panel-titlebar strong { font-family: var(--font-mono); font-size: var(--fs-mono); letter-spacing: 0.06em; }
+  .panel-titlebar .panel-theme { margin-left: auto; color: var(--faint); display: inline-flex; }
+  .panel-titlebar .panel-theme svg { width: 13px; height: 13px; }
+  /* Icon rail (replaces the old horizontal tab strip) */
+  .panel-shell { display: flex; align-items: stretch; }
+  .panel-rail {
+    display: flex; flex-direction: column; gap: 3px;
+    padding: var(--sp-2) 5px;
+    border-right: 1px solid var(--line);
+    background: var(--sunken);
+    flex: none;
+  }
+  .panel-rail .rail-btn {
+    width: 28px; height: 28px;
+    display: grid; place-items: center;
+    color: var(--faint);
+    border: 1px solid transparent;
+    cursor: default;
+  }
+  .panel-rail .rail-btn svg { width: 15px; height: 15px; }
+  .panel-rail .rail-btn[aria-selected="true"] {
+    color: var(--primary);
+    background: var(--panel);
+    border-color: var(--line-2);
+  }
+  .panel-shell .panel-body { flex: 1; min-width: 0; }
+  .panel-body { padding: var(--sp-3); }
+  .panel-search { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+  .panel-search input {
+    flex: 1; font: inherit; padding: 0.55em 0.7em;
+    border: 1px solid var(--line-2); background: var(--paper); color: var(--ink); border-radius: 0;
+  }
+  .panel-search button {
+    font-family: var(--font-mono); font-size: var(--fs-mono); text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 0.55em 0.9em; border: 1px solid var(--primary); background: var(--primary); color: var(--on-accent); cursor: default;
+  }
+  .panel-controls { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; margin-bottom: var(--sp-3); color: var(--faint); font-size: 0.78rem; }
+  .panel-seg { display: inline-flex; border: 1px solid var(--line-2); }
+  .panel-seg span { padding: 0.3em 0.6em; border-right: 1px solid var(--line); font-family: var(--font-mono); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  .panel-seg span:last-child { border-right: none; }
+  .panel-seg span[aria-selected="true"] { background: var(--accent-soft); color: var(--primary); }
+  .panel-explain { display: inline-flex; align-items: center; gap: 0.4em; margin-left: auto; font-family: var(--font-mono); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .panel-toggle { width: 24px; height: 13px; background: var(--primary); position: relative; flex: none; }
+  .panel-toggle::after { content: ""; position: absolute; top: 2px; right: 2px; width: 9px; height: 9px; background: var(--on-accent); }
+  .panel-result-title { font-weight: 600; color: var(--primary); text-decoration: none; display: block; }
+  .panel-result-meta { color: var(--faint); font-size: 0.78rem; display: block; margin: var(--sp-1) 0; font-family: var(--font-mono); }
+  .panel-reason { background: var(--accent-soft); padding: var(--sp-2) var(--sp-3); color: var(--muted); font-size: 0.85rem; margin: var(--sp-2) 0; }
+  .panel-passage { border-left: 2px solid var(--line-2); padding-left: var(--sp-2); color: var(--muted); font-size: 0.86rem; }
+  .panel-passage .role { font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); margin-right: 0.4em; }
+  .score-bar { display: grid; grid-template-columns: 58px 1fr 38px; align-items: center; gap: var(--sp-2); margin-top: 0.4em; font-family: var(--font-mono); font-size: 0.68rem; color: var(--faint); }
+  .score-track { height: 4px; background: var(--sunken); overflow: hidden; }
+  .score-fill { height: 100%; background: var(--primary); }
+  .panel-caption { text-align: center; color: var(--faint); font-size: var(--fs-sm); margin-top: var(--sp-4); }
+
+  /* ---- Real demo video ---- */
+  .demo-figure { margin: 0 0 var(--sp-6); }
+  .demo-video-wrap {
+    position: relative;
+    max-width: 940px;
+    margin: 0 auto;
+    background: var(--sunken);
+    border: 1px solid var(--line-2);
+    box-shadow: 0 0 0 1px var(--accent-soft),
+                0 26px 64px -28px rgba(222, 58, 144, 0.5);
+    overflow: hidden;
+  }
+  .demo-video-wrap video {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: var(--paper);
+  }
+  .demo-caption {
+    text-align: center;
+    color: var(--faint);
+    font-size: var(--fs-sm);
+    margin: var(--sp-4) 0 0;
+  }
+  @media (forced-colors: active) { .demo-video-wrap { box-shadow: none; } }
+  /* The panel recording is portrait, so cap its frame width. */
+  .demo-video-wrap.portrait { max-width: 440px; }
+
+  /* ---- Gallery ---- */
+  .gallery-lead { display: flex; justify-content: center; margin: 0 0 var(--sp-7); }
+  .gallery-gif-frame {
+    width: 100%;
+    max-width: 320px;
+    aspect-ratio: 380 / 680;
+    border: 1px solid var(--line-2);
+    background: var(--sunken);
+    box-shadow: 0 0 0 1px var(--accent-soft),
+                0 26px 64px -30px rgba(222, 58, 144, 0.5);
+    overflow: hidden;
+  }
+  .gallery-gif-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (forced-colors: active) { .gallery-gif-frame { box-shadow: none; } }
+  .gallery-figure { margin: 0; }
+  .gallery-gif-cap {
+    text-align: center; color: var(--faint);
+    font-size: var(--fs-sm); margin: var(--sp-3) 0 0;
+  }
+
+  .gallery-group + .gallery-group { margin-top: var(--sp-6); }
+  .gallery-group h3 {
+    font-family: var(--font-mono); font-size: var(--fs-mono);
+    letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500;
+    color: var(--faint); margin: 0 0 var(--sp-4);
+  }
+  .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(20px, 3vw, 36px); }
+  .gallery-grid.portrait { grid-template-columns: repeat(2, minmax(0, 320px)); justify-content: center; }
+  .shot { margin: 0; border: 1px solid var(--line-2); background: var(--panel); overflow: hidden; }
+  .shot img { width: 100%; height: auto; display: block; background: var(--sunken); border-bottom: 1px solid var(--line); }
+  .shot figcaption { padding: var(--sp-3) var(--sp-4); font-size: var(--fs-sm); color: var(--muted); }
+  .shot figcaption strong {
+    display: block; margin-bottom: 3px; color: var(--ink);
+    font-family: var(--font-mono); font-size: var(--fs-mono);
+    letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600;
+  }
+  @media (max-width: 640px) {
+    .gallery-grid, .gallery-grid.portrait { grid-template-columns: 1fr; justify-content: stretch; }
+  }
+
+  /* ---- Install ---- */
+  .install-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+  .install-steps > li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: var(--sp-4);
+    padding: var(--sp-6) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .install-steps > li:first-child { border-top: 1px solid var(--line); }
+  .install-steps > li::before {
+    content: counter(step, decimal-leading-zero);
+    font-family: var(--font-mono);
+    font-size: var(--fs-md);
+    color: var(--primary);
+    letter-spacing: 0.02em;
+  }
+  .install-steps h3 { font-size: var(--fs-md); letter-spacing: -0.02em; margin-bottom: var(--sp-3); font-weight: 600; }
+  .install-steps ol { padding-left: 1.2em; color: var(--muted); font-size: var(--fs-sm); }
+  .install-steps ol li { margin-bottom: var(--sp-1); }
+  @media (max-width: 640px) {
+    .install-steps > li { grid-template-columns: 1fr; gap: var(--sp-2); }
+  }
+
+  /* ---- CTA band ---- */
+  .cta { text-align: center; padding: var(--sp-8) 0; }
+  .cta h2 { font-size: var(--fs-xl); letter-spacing: -0.04em; max-width: 18ch; margin: 0 auto var(--sp-5); line-height: 0.98; }
+  .cta .actions { display: flex; gap: var(--sp-3); justify-content: center; flex-wrap: wrap; }
+
+  /* ---- Limitations ---- */
+  .limits-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  .limit-card { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: var(--sp-5); }
+  .limit-card h3 { font-size: var(--fs-base); letter-spacing: -0.015em; margin-bottom: var(--sp-2); font-weight: 600; }
+  .limit-card p { margin: 0; font-size: var(--fs-sm); color: var(--muted); }
+  @media (max-width: 900px) { .limits-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .limits-grid { grid-template-columns: 1fr; } }
+
+  /* ---- Footer ---- */
+  footer.site-footer { padding: var(--sp-7) 0 var(--sp-6); border-top: 1px solid var(--line); }
+  .footer-top {
+    display: flex; flex-wrap: wrap; gap: var(--sp-6);
+    justify-content: space-between; align-items: flex-start;
+    margin-bottom: var(--sp-7);
+  }
+  .footer-brand { max-width: 34ch; }
+  .footer-brand .mark { width: 26px; height: 26px; color: var(--primary); margin-bottom: var(--sp-3); }
+  .footer-brand p { font-size: var(--fs-sm); color: var(--faint); margin: 0; }
+  .footer-cols { display: flex; gap: var(--sp-7); flex-wrap: wrap; }
+  .footer-col h4 { font-family: var(--font-mono); font-size: var(--fs-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-bottom: var(--sp-3); font-weight: 500; }
+  .footer-col a { display: block; color: var(--muted); text-decoration: none; font-size: var(--fs-sm); padding: 4px 0; }
+  .footer-col a:hover { color: var(--ink); }
+  .footer-bottom {
+    display: flex; flex-wrap: wrap; gap: var(--sp-3);
+    justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--line); padding-top: var(--sp-4);
+    font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--faint); letter-spacing: 0.04em;
+  }
+
+  /* ---- Scroll reveal (only active when JS enables .reveal-on) ---- */
+  .reveal-on [data-reveal] {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity .7s cubic-bezier(.16,.84,.44,1), transform .7s cubic-bezier(.16,.84,.44,1);
+    will-change: opacity, transform;
+  }
+  .reveal-on [data-reveal].is-visible { opacity: 1; transform: none; }
+
+  @media (max-width: 640px) {
+    :root { --sp-8: 90px; --sp-7: 64px; }
+    .hero { padding-top: 40px; }
+  }
+
+  /* ---- Forced-colors / high-contrast fallback ----
+     Drop gradient text-clipping and glows so system colors win. */
+  @media (forced-colors: active) {
+    .brand, .hero h1 em {
+      background: none;
+      color: CanvasText;
+      -webkit-text-fill-color: CanvasText;
+    }
+    .btn-primary, .btn-primary:hover { box-shadow: none; }
+    :focus-visible { outline: 2px solid CanvasText; }
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="convsearch home">
+      <svg class="mark" viewBox="0 0 100 100" role="img" aria-label="convsearch">
+        <title>convsearch</title>
+        <defs>
+          <mask id="csm-header" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+            <rect x="0" y="0" width="100" height="100" fill="#fff"/>
+            <circle cx="58" cy="58" r="17" fill="#000"/>
+          </mask>
+        </defs>
+        <rect x="9" y="9" width="58" height="58" fill="currentColor" opacity="0.35"/>
+        <rect x="29" y="29" width="58" height="58" fill="currentColor" mask="url(#csm-header)"/>
+      </svg>
+      convsearch
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <span class="nav-links">
+        <a href="#how-it-works">How it works</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#retrieval">Retrieval</a>
+        <a href="#ask">Ask</a>
+        <a href="#panel">Panel</a>
+        <a href="#install">Install</a>
+      </span>
+      <a class="btn" href="https://github.com/SidharthAnand04/convsearch" rel="noreferrer">
+        <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+          <path d="M8 0C3.58 0 0 3.64 0 8.13c0 3.6 2.29 6.65 5.47 7.73.4.08.55-.18.55-.4v-1.4c-2.22.49-2.69-1.09-2.69-1.09-.36-.94-.89-1.19-.89-1.19-.72-.5.06-.49.06-.49.8.06 1.22.84 1.22.84.71 1.24 1.87.88 2.33.67.07-.53.28-.88.5-1.08-1.78-.2-3.64-.91-3.64-4.05 0-.9.31-1.63.82-2.2-.08-.2-.36-1.03.08-2.15 0 0 .67-.22 2.2.84a7.5 7.5 0 0 1 4 0c1.53-1.06 2.2-.84 2.2-.84.44 1.12.16 1.95.08 2.15.51.57.82 1.3.82 2.2 0 3.15-1.87 3.84-3.65 4.04.29.26.54.75.54 1.52v2.25c0 .22.15.48.55.4A8.14 8.14 0 0 0 16 8.13C16 3.64 12.42 0 8 0Z"/>
+        </svg>
+        GitHub
+      </a>
+      <button class="btn btn-icon theme-toggle" id="theme-toggle" type="button" aria-pressed="true">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/>
+        </svg>
+        <span class="visually-hidden">Toggle color theme</span>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="top">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal><span class="idx">extension v0.3</span> Local-first ChatGPT search + RAG</p>
+      <h1 data-reveal>
+        Search your <em>own</em> ChatGPT history. <span class="thin">Answered with citations, on your machine.</span>
+      </h1>
+      <p class="tagline" data-reveal>
+        convsearch is a Chrome extension and a local Python server. The extension quietly
+        captures conversations as you read them on chatgpt.com; the server indexes them for
+        hybrid keyword + semantic search, explainable ranking, cited question-answering, and
+        structured memory — entirely on your own disk. No account, no required API key, nothing
+        leaves your machine.
+      </p>
+      <div class="hero-actions" data-reveal>
+        <a class="btn btn-primary" href="#install">Install convsearch</a>
+        <a class="btn" href="https://github.com/SidharthAnand04/convsearch" rel="noreferrer">View source</a>
+      </div>
+
+      <div class="hero-facts" data-reveal>
+        <div class="fact">
+          <span class="n">// 01</span>
+          <strong>No sync button</strong>
+          <span>Capture is passive — open a conversation, it is saved.</span>
+        </div>
+        <div class="fact">
+          <span class="n">// 02</span>
+          <strong>No required API key</strong>
+          <span>Search, capture, and local Ask need no cloud key; cloud is opt-in.</span>
+        </div>
+        <div class="fact">
+          <span class="n">// 03</span>
+          <strong>Loopback only</strong>
+          <span>The server binds 127.0.0.1 and never phones home.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURE GRID ============ -->
+  <section id="features" aria-labelledby="features-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow"><span class="idx">01</span> What it does</p>
+        <h2 class="section-title" id="features-h">Six capabilities, one local process.</h2>
+      </div>
+      <div class="feature-grid">
+        <div class="feature" data-reveal>
+          <span class="fnum">F.01</span>
+          <h3>Hybrid retrieval</h3>
+          <p>SQLite FTS5 lexical search fused with local FAISS embeddings via reciprocal rank fusion, then aggregated to conversations.</p>
+        </div>
+        <div class="feature" data-reveal>
+          <span class="fnum">F.02</span>
+          <h3>Explainable ranking</h3>
+          <p>Every result can show a "ranked because…" reason and the full score breakdown — lexical, semantic, title, reranker, fused, final.</p>
+        </div>
+        <div class="feature" data-reveal>
+          <span class="fnum">F.03</span>
+          <h3>Structured memory &amp; projects</h3>
+          <p>Durable facts, decisions, constraints, and project dashboards extracted from your conversations and queryable over HTTP.</p>
+        </div>
+        <div class="feature" data-reveal>
+          <span class="fnum">F.04</span>
+          <h3>Local Ask via Ollama</h3>
+          <p>Cited answers synthesized from your own history — a local Ollama model first, with an opt-in cloud fallback.</p>
+        </div>
+        <div class="feature" data-reveal>
+          <span class="fnum">F.05</span>
+          <h3>Private self-improvement</h3>
+          <p>Your clicks and asks are logged locally and nudge future ranking. On-device heuristics plus local-LLM summaries — no shared model.</p>
+        </div>
+        <div class="feature" data-reveal>
+          <span class="fnum">F.06</span>
+          <h3>Side-panel extension</h3>
+          <p>A Chrome side panel beside chatgpt.com — an icon-rail nav across eleven views, a light/dark theme toggle, a universal command bar, and a right-click search.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GALLERY ============ -->
+  <section id="gallery" aria-labelledby="gallery-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow"><span class="idx">◱</span> See it</p>
+        <h2 class="section-title" id="gallery-h">What it actually looks like.</h2>
+        <p>
+          Real captures from convsearch running locally — the animated Ask &amp; Search flow,
+          the side panel in both themes, and the landing page. Every pixel here is rendered on a
+          local machine talking to <code>127.0.0.1:8756</code>.
+        </p>
+      </div>
+
+      <div class="gallery-lead" data-reveal>
+        <figure class="gallery-figure">
+          <div class="gallery-gif-frame">
+            <img id="demo-gif"
+                 src="media/demo-poster.png"
+                 data-motion-src="media/demo.gif"
+                 data-still-src="media/demo-poster.png"
+                 width="380" height="680" loading="lazy" decoding="async"
+                 alt="Animated demo of the convsearch side panel: typing a query, receiving a cited answer, then browsing the ranked results with their score breakdowns.">
+          </div>
+          <figcaption class="gallery-gif-cap">Ask &amp; Search in the side panel — a cited answer, then ranked results. Animation pauses to a still frame under reduced-motion.</figcaption>
+        </figure>
+      </div>
+
+      <div class="gallery-group" data-reveal>
+        <h3>Side panel — light &amp; dark</h3>
+        <div class="gallery-grid portrait">
+          <figure class="shot">
+            <img src="media/panel-dark.png" width="440" height="780" loading="lazy" decoding="async"
+                 alt="convsearch side panel in dark theme: search box, level switcher, a ranked result with its 'Ranked because' reason and score bars.">
+            <figcaption><strong>Dark theme</strong>Icon-rail nav, level switcher, and "Ranked because" shown by default with a per-result score mini-chart.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="media/panel-light.png" width="440" height="780" loading="lazy" decoding="async"
+                 alt="convsearch side panel in light theme, showing the same ranked-result layout on a light lavender background.">
+            <figcaption><strong>Light theme</strong>The same surface, toggled light — the panel theme is independent and persisted.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="gallery-group" data-reveal>
+        <h3>The landing &amp; overview</h3>
+        <div class="gallery-grid">
+          <figure class="shot">
+            <img src="media/landing-dark.png" width="1440" height="900" loading="lazy" decoding="async"
+                 alt="convsearch landing page rendered in dark theme.">
+            <figcaption><strong>Overview — dark</strong>The project overview, the default near-black indigo theme.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="media/landing-light.png" width="1440" height="900" loading="lazy" decoding="async"
+                 alt="convsearch landing page rendered in light theme.">
+            <figcaption><strong>Overview — light</strong>The same page with the light theme toggled on.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOW IT WORKS (inverted) ============ -->
+  <section class="invert" id="how-it-works" aria-labelledby="how-it-works-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow"><span class="idx">02</span> How it works</p>
+        <h2 class="section-title" id="how-it-works-h">Browse, capture, search — no step in between.</h2>
+        <p>
+          There is nothing to remember to do. You use ChatGPT the way you already do; convsearch
+          watches, saves, and indexes in the background. Everything runs on-device: a local
+          server on 127.0.0.1:8756 backed by SQLite, FAISS, and a memory graph.
+        </p>
+      </div>
+
+      <svg class="flow-diagram" viewBox="0 0 920 220" role="img" aria-labelledby="flow-title flow-desc" data-reveal>
+        <title id="flow-title">Browse, capture, search flow</title>
+        <desc id="flow-desc">
+          You browse a conversation on chatgpt.com. A content script captures it and sends it to
+          the local convsearch server over loopback HTTP, which writes it to SQLite. A few
+          seconds later the server builds embeddings and updates the FAISS index. You then search
+          or ask from the extension side panel or the CLI, and results link back to the real
+          conversation on chatgpt.com.
+        </desc>
+        <rect x="20" y="60" width="230" height="100" class="accent-fill box-stroke" stroke-width="1"/>
+        <text x="135" y="98" text-anchor="middle" font-size="15" font-weight="700">1. Browse</text>
+        <text x="135" y="120" text-anchor="middle" font-size="12" class="muted">Open a conversation</text>
+        <text x="135" y="138" text-anchor="middle" font-size="12" class="muted">on chatgpt.com</text>
+        <line x1="250" y1="110" x2="330" y2="110" class="arrow" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <rect x="335" y="60" width="250" height="100" class="box-stroke" fill="none" stroke-width="1"/>
+        <text x="460" y="90" text-anchor="middle" font-size="15" font-weight="700">2. Capture &amp; index</text>
+        <text x="460" y="112" text-anchor="middle" font-size="12" class="muted">Content script → local server</text>
+        <text x="460" y="130" text-anchor="middle" font-size="12" class="muted">SQLite write, then auto-embed</text>
+        <text x="460" y="148" text-anchor="middle" font-size="12" class="muted">~seconds later, incrementally</text>
+        <line x1="585" y1="110" x2="665" y2="110" class="arrow" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <rect x="670" y="60" width="230" height="100" class="accent-fill box-stroke" stroke-width="1"/>
+        <text x="785" y="98" text-anchor="middle" font-size="15" font-weight="700">3. Search &amp; ask</text>
+        <text x="785" y="120" text-anchor="middle" font-size="12" class="muted">Side panel, popup, or CLI</text>
+        <text x="785" y="138" text-anchor="middle" font-size="12" class="muted">Links back to chatgpt.com</text>
+        <text x="460" y="200" text-anchor="middle" font-size="12" class="muted">Everything above the arrows happens on your machine — nothing is sent to a cloud service.</text>
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0L10 5L0 10z" class="muted"/>
+          </marker>
+        </defs>
+      </svg>
+
+      <div class="steps">
+        <div class="step" data-reveal>
+          <span class="step-num">STEP 01</span>
+          <h3>Browse normally</h3>
+          <p>No sync button, nothing to click. A conversation only needs to be one you've opened in a tab while the extension was installed.</p>
+        </div>
+        <div class="step" data-reveal>
+          <span class="step-num">STEP 02</span>
+          <h3>Capture is automatic</h3>
+          <p>A content script scrapes the conversation after the page settles (about 1.5s of no DOM changes), sends it to <code>127.0.0.1:8756</code>, which writes it to SQLite.</p>
+        </div>
+        <div class="step" data-reveal>
+          <span class="step-num">STEP 03</span>
+          <h3>Indexing runs on its own</h3>
+          <p>The server debounces and rebuilds embeddings for new passages a few seconds after capture — and catches up any unindexed content on startup — so conversations become searchable without a click. The panel shows an ambient index status; a manual "Rebuild" stays out of the way as a quiet recovery affordance.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRIVACY ============ -->
+  <section id="privacy" aria-labelledby="privacy-h">
+    <div class="wrap cols-2">
+      <div data-reveal>
+        <p class="eyebrow"><span class="idx">03</span> Local-first</p>
+        <h2 class="section-title" id="privacy-h">Nothing leaves your machine.</h2>
+        <p>
+          convsearch was built around one constraint: your conversation history should never
+          have to leave your disk to be searchable.
+        </p>
+        <p>
+          Conversation text goes from the browser tab, to the extension's background worker,
+          to <code>127.0.0.1</code>, to a SQLite file on your machine — and nowhere else.
+        </p>
+      </div>
+      <ul class="list-check" data-reveal>
+        <li>
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+          <span><strong>No cloud service.</strong> No conversation text is ever sent to a third party — not for search, not for embeddings.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+          <span><strong>No API key.</strong> The CLI and server never require a cloud API key. Embeddings run locally with Sentence Transformers.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+          <span><strong>Loopback bind.</strong> <code>convsearch serve</code> binds <code>127.0.0.1</code> by default and should never run with <code>--host 0.0.0.0</code> — there is no authentication on the server.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+          <span><strong>Strict CORS.</strong> The server echoes an allow-list — the extension's origin plus <code>chatgpt.com</code> and <code>chat.openai.com</code>, never a wildcard — so an arbitrary page cannot read your results.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+          <span><strong>Everything on disk stays on disk.</strong> Raw exports, SQLite data, the FTS5 index, and the FAISS vector index are all local files in your workspace.</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ RETRIEVAL ============ -->
+  <section id="retrieval" aria-labelledby="retrieval-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow"><span class="idx">04</span> Retrieval</p>
+        <h2 class="section-title" id="retrieval-h">Keyword search fused with local embeddings.</h2>
+        <p>
+          Search runs two independent retrieval channels over your workspace and combines them,
+          rather than relying on either alone.
+        </p>
+      </div>
+
+      <div class="pipeline" data-reveal>
+        <span class="node">SQLite FTS5 (lexical)</span>
+        <span class="sep">+</span>
+        <span class="node">FAISS IndexFlatIP (semantic)</span>
+        <span class="sep">→</span>
+        <span class="node">Reciprocal Rank Fusion</span>
+        <span class="sep">→</span>
+        <span class="node">conversation-level aggregation</span>
+      </div>
+
+      <div class="cols-2">
+        <div data-reveal>
+          <p>
+            Passages are embedded locally with a Sentence Transformers model
+            (<code>BAAI/bge-small-en-v1.5</code> by default, configurable) and stored in a FAISS
+            <code>IndexFlatIP</code> index. Lexical and semantic candidates are fused with
+            Reciprocal Rank Fusion, then rolled up from passages to conversations using explicit
+            features — best passage score, top-three mean, distinct messages and segments touched,
+            channel diversity, and a small length penalty.
+          </p>
+          <p>
+            Live-captured conversations only ever have one path, since the browser renders only
+            the branch you're looking at. Conversations imported from an export ZIP can carry
+            alternate branches, indexed but excluded from search unless you pass
+            <code>--include-branches</code> (or <code>branches=1</code> on the popup/API).
+          </p>
+        </div>
+        <div data-reveal>
+          <div class="callout">
+            <p>
+              <strong>Query syntax is intentionally small:</strong> quote phrases
+              (<code>"local indexes"</code>), exclude terms with <code>-term</code>, and technical
+              identifiers like <code>IndexFlatIP</code> or <code>BAAI/bge-small-en-v1.5</code> are
+              preserved as-is.
+            </p>
+          </div>
+          <div class="callout warn">
+            <p>
+              <strong>Be aware:</strong> quoting and <code>-exclusion</code> only constrain the
+              lexical (FTS5) channel. Because results are fused across both channels, a
+              conversation can still surface through the semantic channel even if it doesn't
+              satisfy an exclusion — rank fusion, not a strict filter, decides what you see.
+            </p>
+          </div>
+          <div class="callout">
+            <p>
+              <strong>Explainable ranking.</strong> Every result shows <em>why</em> it ranked
+              where it did — a short "Ranked because…" reason plus a legible score mini-chart —
+              on by default in the side panel, with a toggle to hide it. From the CLI or API it's
+              <code>convsearch search --explain</code> or <code>GET /search?explain=1</code>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ASK ============ -->
+  <section id="ask" aria-labelledby="ask-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow"><span class="idx">05</span> Ask, don't just search</p>
+        <h2 class="section-title" id="ask-h">A cited answer from your own conversations.</h2>
+        <p>
+          Retrieval is nice, but sometimes you want the answer, not ten links.
+          <code>ask</code> retrieves the most relevant passages from your past conversations and
+          has a language model synthesize a written answer that <strong>cites the source
+          conversations</strong> it drew from — one numbered entry per source, with title, date,
+          and a quote.
+        </p>
+      </div>
+
+      <div class="table-scroll" data-reveal>
+        <pre><code>convsearch ask "how did I set up FAISS locally?" -w ./workspace
+# or over HTTP:  GET /ask?q=how%20did%20I%20set%20up%20FAISS%20locally</code></pre>
+      </div>
+
+      <div class="cols-2">
+        <div data-reveal>
+          <p>Generation backend is selectable with <code>--backend auto|ollama|anthropic</code>:</p>
+          <ul class="list-check">
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+              <span><strong>auto (default)</strong> tries a <strong>local</strong> Ollama model first — <code>ollama serve</code> and <code>ollama pull gemma3:1b</code> — and only falls back to the cloud if it isn't there.</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+              <span><strong>ollama</strong> forces the fully local path. Nothing leaves the machine.</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+              <span><strong>anthropic</strong> forces the cloud path, which needs <code>ANTHROPIC_API_KEY</code> and the <code>llm</code> extra — the only path that sends retrieved passages off the machine, and only if you choose it.</span>
+            </li>
+          </ul>
+        </div>
+        <div data-reveal>
+          <div class="callout">
+            <p>
+              The local query <strong>planner</strong> (<code>convsearch plan</code>) goes a step
+              further: it returns a grounded, cited natural-language answer with supersession
+              tracing (which decisions replaced which) and open-task filtering, drawing on the
+              same structured memories and projects.
+            </p>
+          </div>
+          <h3 style="font-size:var(--fs-base); letter-spacing:-0.015em; margin:var(--sp-5) 0 var(--sp-3); font-weight:600;">Structured memory &amp; projects</h3>
+          <p style="font-size:var(--fs-sm)">
+            <code>GET /memories</code> lists facts, decisions, constraints, and open questions;
+            <code>GET /memories/{id}</code> returns one with evidence, relations, and status
+            history. <code>GET /projects/{name}</code> returns a dashboard — summary,
+            architecture, decisions (including superseded ones), open/completed tasks, risks,
+            known bugs, milestones, and the conversations behind it all. Extraction is
+            deterministic by default; <code>memories extract --llm</code>
+            (<code>--backend auto|ollama|anthropic</code>) opts into LLM-assisted extraction and
+            degrades cleanly when no backend is present.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PERFORMANCE (measured) ============ -->
+  <section id="performance" aria-labelledby="performance-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow"><span class="idx">06</span> Measured, not marketed</p>
+        <h2 class="section-title" id="performance-h">What it actually costs, on one machine.</h2>
+        <p>
+          These numbers come from <code>scripts/bench.py</code> against the real embedding model
+          (<code>BAAI/bge-small-en-v1.5</code>) on CPU, on the machine this project was built on.
+          They describe the shape of the cost, not a guarantee for your hardware.
+        </p>
+      </div>
+
+      <div class="cols-2">
+        <div data-reveal>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th>Corpus size</th><th>Capture round-trip</th><th>Warm search</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>30 conversations</td><td><code>31.5ms</code></td><td><code>93.5ms</code></td></tr>
+                <tr><td>105 conversations</td><td><code>37.0ms</code></td><td><code>91.6ms</code></td></tr>
+                <tr><td>305 conversations</td><td><code>36.5ms</code></td><td><code>122.7ms</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div data-reveal>
+          <p>
+            At 300 conversations (about 1,200 passages), a full warm search is
+            <strong>~96ms</strong>, and roughly 60% of that is a single forward pass to embed the
+            query text — close to the floor for this model on CPU. A capture (writing a scraped
+            conversation to SQLite) is cheap, around <strong>~35ms</strong> end to end, and stays
+            flat as the workspace grows because indexing is incremental rather than a full
+            rebuild.
+          </p>
+          <div class="callout">
+            <p>
+              A conversation you open does not become searchable instantly. The server debounces
+              embedding for a few seconds after capture, so expect a short, single-digit-second
+              delay between opening a conversation and finding it in search — not zero, and not
+              minutes.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SIDE PANEL ============ -->
+  <section id="panel" aria-labelledby="panel-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow"><span class="idx">07</span> The extension</p>
+        <h2 class="section-title" id="panel-h">A side panel, not just a popup.</h2>
+        <p>
+          The extension declares a Chrome <code>side_panel</code> and a
+          <code>contextMenus</code> entry. The side panel is the main surface — it stays open
+          beside chatgpt.com behind a left <strong>icon rail</strong> spanning eleven views, with
+          a <strong>light/dark theme toggle</strong> (dark by default, persisted) and a universal
+          command bar. The toolbar popup remains as a quick-search fallback.
+        </p>
+      </div>
+
+      <figure class="demo-figure" data-reveal>
+        <div class="demo-video-wrap portrait">
+          <video
+            id="demo-video"
+            src="media/demo.webm"
+            poster="media/demo-poster.png"
+            autoplay muted loop playsinline controls
+            preload="metadata"
+            width="440" height="780"
+            aria-label="Screen recording of the convsearch side panel: typing a question, getting a cited answer, then the ranked results below">
+          </video>
+        </div>
+        <figcaption class="demo-caption">A real screen recording of the Ask &amp; Search flow in the side panel — cited answer first, ranked results below.</figcaption>
+      </figure>
+
+      <div class="cols-2">
+        <div data-reveal>
+          <ul class="list-check">
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+              <span><strong>Ask &amp; Search</strong> — a level switcher (Conversations / Segments / Passages), profile and branch controls, and <strong>"Ranked because"</strong> shown by default with a legible score mini-chart per result.</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+              <span><strong>Plan, Tasks &amp; Timeline</strong> — grounded cited answers, open-task filtering, and a chronological view of your history.</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+              <span><strong>Memories, Projects &amp; Review</strong> — the structured memory store, project workspace dashboards, and an extraction review queue.</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+              <span><strong>Captures, Privacy &amp; Status</strong> — an ambient index/capture status, local-only privacy controls, and troubleshooting — plus <strong>right-click → "Search convsearch for …"</strong> on selected text.</span>
+            </li>
+          </ul>
+          <div class="callout">
+            <p>
+              The core stays local. The panel talks only to the loopback server through the
+              background service worker — no conversation text leaves your machine unless you opt
+              into the cloud Ask backend.
+            </p>
+          </div>
+        </div>
+
+        <div class="panel-frame-wrap" data-reveal>
+          <div class="panel-mock" role="group" aria-label="Mock of the convsearch side panel">
+            <div class="panel-titlebar">
+              <svg class="mark" viewBox="0 0 100 100" aria-hidden="true">
+                <defs>
+                  <mask id="csm-panel" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+                    <rect x="0" y="0" width="100" height="100" fill="#fff"/>
+                    <circle cx="58" cy="58" r="17" fill="#000"/>
+                  </mask>
+                </defs>
+                <rect x="9" y="9" width="58" height="58" fill="currentColor" opacity="0.35"/>
+                <rect x="29" y="29" width="58" height="58" fill="currentColor" mask="url(#csm-panel)"/>
+              </svg>
+              <strong>convsearch</strong>
+              <span class="panel-theme" title="Dark theme (mock)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg>
+              </span>
+            </div>
+            <div class="panel-shell">
+              <div class="panel-rail" role="tablist" aria-label="Side panel views (mock)" aria-hidden="true">
+                <span class="rail-btn" role="tab" aria-selected="false" aria-label="Home" title="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg></span>
+                <span class="rail-btn" role="tab" aria-selected="true" aria-label="Ask &amp; Search" title="Ask &amp; Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>
+                <span class="rail-btn" role="tab" aria-selected="false" aria-label="Plan" title="Plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
+                <span class="rail-btn" role="tab" aria-selected="false" aria-label="Tasks" title="Tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h10M4 12h10M4 19h10"/><path d="M18 5l2 2 3-3"/></svg></span>
+                <span class="rail-btn" role="tab" aria-selected="false" aria-label="Projects" title="Projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span>
+                <span class="rail-btn" role="tab" aria-selected="false" aria-label="Timeline" title="Timeline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+                <span class="rail-btn" role="tab" aria-selected="false" aria-label="Memories" title="Memories"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4Z"/></svg></span>
+                <span class="rail-btn" role="tab" aria-selected="false" aria-label="Review" title="Review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></span>
+                <span class="rail-btn" role="tab" aria-selected="false" aria-label="Captures" title="Captures"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v11m0 0l-4-4m4 4l4-4"/><path d="M4 17v3h16v-3"/></svg></span>
+                <span class="rail-btn" role="tab" aria-selected="false" aria-label="Privacy" title="Privacy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+                <span class="rail-btn" role="tab" aria-selected="false" aria-label="Status" title="Status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg></span>
+              </div>
+            <div class="panel-body">
+              <div class="panel-search">
+                <input type="text" value="faiss index flat ip" readonly aria-label="Example search query" tabindex="-1">
+                <button type="button" tabindex="-1">Search</button>
+              </div>
+              <div class="panel-controls">
+                <span class="panel-seg" aria-label="Result level (mock)">
+                  <span aria-selected="true">Convs</span>
+                  <span aria-selected="false">Segments</span>
+                  <span aria-selected="false">Passages</span>
+                </span>
+                <span class="panel-explain">
+                  <span class="panel-toggle" aria-hidden="true"></span> Ranked because
+                </span>
+              </div>
+              <div>
+                <a class="panel-result-title" href="#" tabindex="-1">Choosing a vector index for local search</a>
+                <span class="panel-result-meta">2026-07-24 · score 0.412</span>
+                <div class="panel-reason">Ranked because a strong exact match on <em>IndexFlatIP</em> agreed with the semantic channel, and the reranker kept it on top.</div>
+                <div class="panel-passage"><span class="role">assistant</span>IndexFlatIP does exact search over normalized vectors, which is fine at this scale…</div>
+                <div class="score-bar"><span>lexical</span><span class="score-track"><span class="score-fill" style="width:82%"></span></span><span>0.82</span></div>
+                <div class="score-bar"><span>semantic</span><span class="score-track"><span class="score-fill" style="width:71%"></span></span><span>0.71</span></div>
+                <div class="score-bar"><span>reranker</span><span class="score-track"><span class="score-fill" style="width:64%"></span></span><span>0.64</span></div>
+                <div class="score-bar"><span>final</span><span class="score-track"><span class="score-fill" style="width:41%"></span></span><span>0.41</span></div>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="panel-caption">Mock UI for illustration — not a screenshot. Query text, reasons, and scores are examples, not live data.</p>
+    </div>
+  </section>
+
+  <!-- ============ LEARNING ============ -->
+  <section id="learning" aria-labelledby="learning-h">
+    <div class="wrap cols-2">
+      <div data-reveal>
+        <p class="eyebrow"><span class="idx">08</span> Private self-improvement</p>
+        <h2 class="section-title" id="learning-h">It gets better as you use it — on-device.</h2>
+        <p>
+          convsearch logs your own interactions — searches, opens, inspects, asks — to a local
+          <code>interactions</code> table, and uses them to improve future results. All of it
+          runs on-device; nothing is uploaded, and there is no shared model.
+        </p>
+        <div class="callout">
+          <p>
+            Learned preferences are heuristic plus local-LLM summaries of your own usage, not a
+            trained model — a nudge on ranking, not a guarantee. <code>learn clear --yes</code>
+            deletes the logged interactions whenever you want a clean slate.
+          </p>
+        </div>
+      </div>
+      <ul class="list-check" data-reveal>
+        <li>
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+          <span><strong>Click-informed ranking.</strong> Prior opens can boost future ranking via <code>GET /search?boost=1</code>; interactions are recorded with <code>POST /feedback</code>.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+          <span><strong>Query suggestions.</strong> <code>GET /suggestions</code> surfaces your recent and popular queries.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0l-3.5-3.5a1 1 0 1 1 1.4-1.4l2.8 2.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"/></svg>
+          <span><strong>Learned preferences.</strong> <code>convsearch learn run</code> uses the local LLM to summarize your behavior into durable notes in a <code>learned_preferences</code> table. Inspect them with <code>learn show</code> and <code>GET /learn/stats</code>.</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ INSTALL ============ -->
+  <section id="install" aria-labelledby="install-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow"><span class="idx">09</span> Install</p>
+        <h2 class="section-title" id="install-h">Run the server, load the extension.</h2>
+        <p>Requires Python 3.12+ and <code>uv</code>. Everything below runs on your own machine.</p>
+        <p style="font-size:var(--fs-sm)"><strong>One command:</strong> run <code>bash scripts/convsearch-up.sh</code> (macOS/Linux) or <code>powershell -File scripts/convsearch-up.ps1</code> (Windows) to sync, index, and start the server in one go — then just load the extension (step&nbsp;3). No ChatGPT export is needed: the launcher starts on an empty workspace and fills up as you browse. Prefer to see each piece? Step through it manually below. Once the native messaging host is installed (<code>install-native-host</code>), the extension can even auto-start the server for you.</p>
+        <div class="callout" data-reveal>
+          <p style="font-size:var(--fs-sm)">
+            <strong>No export required.</strong> Live capture is the primary path — install the
+            extension, keep the local server running, and every conversation you open on
+            chatgpt.com is captured and auto-indexed. Importing a ChatGPT export ZIP is an
+            <strong>optional accelerator</strong> to backfill older history you never reopen; skip
+            it entirely and convsearch still works from your first browse.
+          </p>
+        </div>
+      </div>
+
+      <ol class="install-steps">
+        <li data-reveal>
+          <div>
+            <h3>Install and create a workspace</h3>
+            <div class="table-scroll">
+              <pre><code>uv sync --extra ml --extra llm
+uv run convsearch init ./workspace</code></pre>
+            </div>
+            <p style="font-size:var(--fs-sm)">Optionally seed it from an existing ChatGPT export ZIP, then build the index once so imported conversations are searchable immediately:</p>
+            <div class="table-scroll">
+              <pre><code>uv run convsearch import ~/Downloads/chatgpt-export.zip --workspace ./workspace
+uv run convsearch index --workspace ./workspace</code></pre>
+            </div>
+            <p style="font-size:var(--fs-sm)">Live capture auto-indexes in the background, so <code>convsearch index</code> is mainly needed after a bulk import or as a manual rebuild.</p>
+          </div>
+        </li>
+        <li data-reveal>
+          <div>
+            <h3>Start the local server</h3>
+            <div class="table-scroll">
+              <pre><code>uv run convsearch serve --workspace ./workspace</code></pre>
+            </div>
+            <p style="font-size:var(--fs-sm)">Leave it running while you browse. It binds <code>127.0.0.1:8756</code> (stdlib <code>http.server</code>, strict CORS allow-list) and exposes <code>GET /health</code>, <code>GET /search</code> (with <code>level</code>, <code>explain=1</code>, <code>boost=1</code>), <code>GET /ask</code>, <code>GET /memories</code>, <code>GET /memories/{id}</code>, <code>GET /projects</code>, <code>GET /projects/{name}</code>, <code>GET /conversation/{id}</code>, <code>GET /suggestions</code>, <code>GET /learn/stats</code>, <code>POST /capture</code>, <code>POST /reindex</code>, and <code>POST /feedback</code>.</p>
+          </div>
+        </li>
+        <li data-reveal>
+          <div>
+            <h3>Load the extension, unpacked</h3>
+            <p style="font-size:var(--fs-sm)">Chrome doesn't publish this to the Web Store — you load it directly from source:</p>
+            <ol>
+              <li>Open <code>chrome://extensions</code>.</li>
+              <li>Turn on <strong>Developer mode</strong> (top right).</li>
+              <li>Click <strong>Load unpacked</strong> and select the <code>extension/</code> folder from the repository.</li>
+              <li>Pin the extension and open its <strong>side panel</strong> from the toolbar. Right-clicking selected text also offers <strong>"Search convsearch for …"</strong>.</li>
+            </ol>
+          </div>
+        </li>
+        <li data-reveal>
+          <div>
+            <h3>Browse, then search — or ask</h3>
+            <p style="font-size:var(--fs-sm)">Open a few conversations on chatgpt.com. Open the side panel and search — indexing is automatic and the ambient status shows when it has caught up (usually within seconds). Use <strong>Ask &amp; Search</strong> (or the CLI) for a cited answer:</p>
+            <div class="table-scroll">
+              <pre><code>uv run convsearch ask "how did I set up FAISS?" -w ./workspace</code></pre>
+            </div>
+            <p style="font-size:var(--fs-sm)">For a fully local answer, run <code>ollama serve</code> and <code>ollama pull gemma3:1b</code> first; otherwise set <code>ANTHROPIC_API_KEY</code> and install the <code>llm</code> extra to use the cloud backend.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ LIMITATIONS ============ -->
+  <section id="limitations" aria-labelledby="limitations-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow"><span class="idx">10</span> Honest limitations</p>
+        <h2 class="section-title" id="limitations-h">What this doesn't do.</h2>
+        <p>Stated plainly, because the design choices behind them are deliberate trade-offs, not bugs.</p>
+      </div>
+      <div class="limits-grid">
+        <div class="limit-card" data-reveal>
+          <h3>Only conversations you open</h3>
+          <p>Capture is passive and only sees conversations opened in a tab. Older conversations you never revisit need the export-ZIP import route.</p>
+        </div>
+        <div class="limit-card" data-reveal>
+          <h3>Depends on ChatGPT's DOM</h3>
+          <p>There's no official API — the content script reads the rendered page. A redesign can break capture. It's built to fail quietly rather than break the page.</p>
+        </div>
+        <div class="limit-card" data-reveal>
+          <h3>The date isn't ChatGPT's timestamp</h3>
+          <p>For a captured conversation, the date is when convsearch saw it. Conversations imported from an export ZIP do carry ChatGPT's real timestamp.</p>
+        </div>
+        <div class="limit-card" data-reveal>
+          <h3>Query filters aren't absolute</h3>
+          <p><code>-exclusion</code> and quoted phrases only constrain the lexical channel; rank fusion means the semantic channel can still surface a match.</p>
+        </div>
+        <div class="limit-card" data-reveal>
+          <h3>Visible branch only, live</h3>
+          <p>Live capture only sees the branch you're currently looking at. Alternate branches exist only for conversations imported from an export ZIP.</p>
+        </div>
+        <div class="limit-card" data-reveal>
+          <h3>No filtering by role</h3>
+          <p>Tool calls and reasoning-style turns are indexed alongside ordinary prose — a search can occasionally surface machinery rather than conversation.</p>
+        </div>
+        <div class="limit-card" data-reveal>
+          <h3>Segments lag behind live capture</h3>
+          <p>Incremental indexing embeds new passages but doesn't rebuild <code>segments</code>, so <code>--level segment</code> search stays stale until the next full rebuild.</p>
+        </div>
+        <div class="limit-card" data-reveal>
+          <h3>Local answers need Ollama or a key</h3>
+          <p><code>ask</code> and <code>plan</code> only generate text with a local Ollama model running or a cloud Anthropic key set. Retrieval still runs locally.</p>
+        </div>
+        <div class="limit-card" data-reveal>
+          <h3>Learned preferences are heuristic</h3>
+          <p>The self-improvement loop is on-device heuristics plus local-LLM summaries of your own clicks — a nudge on ranking, not a trained model.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA ============ -->
+  <section class="invert cta" aria-labelledby="cta-h">
+    <div class="wrap">
+      <p class="eyebrow" style="justify-content:center" data-reveal><span class="idx">→</span> Get started</p>
+      <h2 id="cta-h" data-reveal>Your ChatGPT history, searchable and local.</h2>
+      <div class="actions" data-reveal>
+        <a class="btn btn-primary" href="#install">Install convsearch</a>
+        <a class="btn" href="https://github.com/SidharthAnand04/convsearch" rel="noreferrer">
+          <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.64 0 8.13c0 3.6 2.29 6.65 5.47 7.73.4.08.55-.18.55-.4v-1.4c-2.22.49-2.69-1.09-2.69-1.09-.36-.94-.89-1.19-.89-1.19-.72-.5.06-.49.06-.49.8.06 1.22.84 1.22.84.71 1.24 1.87.88 2.33.67.07-.53.28-.88.5-1.08-1.78-.2-3.64-.91-3.64-4.05 0-.9.31-1.63.82-2.2-.08-.2-.36-1.03.08-2.15 0 0 .67-.22 2.2.84a7.5 7.5 0 0 1 4 0c1.53-1.06 2.2-.84 2.2-.84.44 1.12.16 1.95.08 2.15.51.57.82 1.3.82 2.2 0 3.15-1.87 3.84-3.65 4.04.29.26.54.75.54 1.52v2.25c0 .22.15.48.55.4A8.14 8.14 0 0 0 16 8.13C16 3.64 12.42 0 8 0Z"/>
+          </svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <svg class="mark" viewBox="0 0 100 100" role="img" aria-label="convsearch">
+          <title>convsearch</title>
+          <defs>
+            <mask id="csm-footer" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+              <rect x="0" y="0" width="100" height="100" fill="#fff"/>
+              <circle cx="58" cy="58" r="17" fill="#000"/>
+            </mask>
+          </defs>
+          <rect x="9" y="9" width="58" height="58" fill="currentColor" opacity="0.35"/>
+          <rect x="29" y="29" width="58" height="58" fill="currentColor" mask="url(#csm-footer)"/>
+        </svg>
+        <p>A local tool. This page describes its actual behavior — no telemetry, no accounts, no pricing.</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="#how-it-works">How it works</a>
+          <a href="#gallery">Gallery</a>
+          <a href="#retrieval">Retrieval</a>
+          <a href="#ask">Ask</a>
+          <a href="#panel">Side panel</a>
+          <a href="#learning">Learning</a>
+        </div>
+        <div class="footer-col">
+          <h4>Get started</h4>
+          <a href="#install">Install</a>
+          <a href="#privacy">Privacy</a>
+          <a href="#limitations">Limitations</a>
+          <a href="https://github.com/SidharthAnand04/convsearch" rel="noreferrer">GitHub repository</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>convsearch // local-first ChatGPT search</span>
+      <span>127.0.0.1:8756</span>
+    </div>
+  </div>
+</footer>
+
+<script src="vendor/lenis.min.js"></script>
+<script>
+  (function () {
+    "use strict";
+    var root = document.documentElement;
+
+    /* ---- Theme toggle ---- */
+    var toggle = document.getElementById("theme-toggle");
+    var STORAGE_KEY = "convsearch-theme";
+    function applyTheme(theme) {
+      if (theme === "light" || theme === "dark") {
+        root.setAttribute("data-theme", theme);
+        toggle.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+      }
+    }
+    var stored = null;
+    try { stored = window.localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    if (stored) applyTheme(stored);
+    toggle.addEventListener("click", function () {
+      var current = root.getAttribute("data-theme");
+      if (!current) {
+        current = "dark"; /* dark is the default palette */
+      }
+      var next = current === "dark" ? "light" : "dark";
+      applyTheme(next);
+      try { window.localStorage.setItem(STORAGE_KEY, next); } catch (e) {}
+    });
+
+    /* ---- Motion gate ---- */
+    var reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
+    var allowMotion = !reduceMQ.matches;
+
+    /* ---- Demo video: don't autoplay under reduced motion ---- */
+    (function () {
+      var video = document.getElementById("demo-video");
+      if (!video) return;
+      function applyMotionPref(reduce) {
+        if (reduce) {
+          video.removeAttribute("autoplay");
+          video.loop = false;
+          video.setAttribute("controls", "");
+          try { video.pause(); } catch (e) {}
+        } else if (video.hasAttribute("data-autoplay-default")) {
+          video.loop = true;
+          try { video.play(); } catch (e) {}
+        }
+      }
+      video.setAttribute("data-autoplay-default", "");
+      applyMotionPref(reduceMQ.matches);
+      if (typeof reduceMQ.addEventListener === "function") {
+        reduceMQ.addEventListener("change", function (e) { applyMotionPref(e.matches); });
+      } else if (typeof reduceMQ.addListener === "function") {
+        reduceMQ.addListener(function (e) { applyMotionPref(e.matches); });
+      }
+    })();
+
+    /* ---- Gallery GIF: animate only when motion is allowed ----
+       The markup ships the still poster as src; we upgrade to the animated
+       GIF when motion is allowed and swap back to the still under reduce. */
+    (function () {
+      var gif = document.getElementById("demo-gif");
+      if (!gif) return;
+      var motionSrc = gif.getAttribute("data-motion-src");
+      var stillSrc = gif.getAttribute("data-still-src");
+      if (!motionSrc || !stillSrc) return;
+      function applyGif(reduce) {
+        var want = reduce ? stillSrc : motionSrc;
+        if (gif.getAttribute("src") !== want) gif.setAttribute("src", want);
+      }
+      applyGif(reduceMQ.matches);
+      if (typeof reduceMQ.addEventListener === "function") {
+        reduceMQ.addEventListener("change", function (e) { applyGif(e.matches); });
+      } else if (typeof reduceMQ.addListener === "function") {
+        reduceMQ.addListener(function (e) { applyGif(e.matches); });
+      }
+    })();
+
+    /* ---- Lenis smooth scroll (only when motion is allowed) ----
+       Bundled Lenis is 1.1.14, which has no autoRaf/autoToggle/anchors/
+       allowNestedScroll — so we drive rAF ourselves, handle anchor offset
+       ourselves, and mark nested scrollers with data-lenis-prevent below. */
+    if (allowMotion && typeof window.Lenis === "function") {
+      try {
+        /* keep horizontal scrollers (code blocks, tables) from hijacking
+           the page since this Lenis has no allowNestedScroll */
+        document.querySelectorAll(".table-scroll, pre").forEach(function (el) {
+          el.setAttribute("data-lenis-prevent", "");
+        });
+
+        var lenis = new window.Lenis({
+          lerp: 0.1,
+          smoothWheel: true,
+          wheelMultiplier: 1,
+          touchMultiplier: 1.5,
+          syncTouch: false
+        });
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
+
+        /* keep in-page anchor links smooth via Lenis, clearing the 68px sticky header */
+        document.addEventListener("click", function (e) {
+          var a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+          if (!a) return;
+          var id = a.getAttribute("href");
+          if (id === "#" || id.length < 2) return;
+          var target = document.querySelector(id);
+          if (target) { e.preventDefault(); lenis.scrollTo(target, { offset: -68 }); }
+        });
+      } catch (err) { /* fall back to native scrolling */ }
+    }
+
+    /* ---- Scroll reveal (only when motion is allowed) ---- */
+    if (allowMotion && "IntersectionObserver" in window) {
+      root.classList.add("reveal-on");
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            io.unobserve(entry.target);
+          }
+        });
+      }, { rootMargin: "0px 0px -8% 0px", threshold: 0.05 });
+      document.querySelectorAll("[data-reveal]").forEach(function (el) { io.observe(el); });
+    }
+  })();
+</script>
+
+</body>
+</html>

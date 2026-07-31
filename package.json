@@ -1,0 +1,22 @@
+{
+  "name": "convsearch",
+  "version": "0.1.0",
+  "private": true,
+  "description": "End-to-end test harness for the convsearch Chrome extension and local server.",
+  "type": "commonjs",
+  "scripts": {
+    "live": "node scripts/live.js",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "setup": "playwright install chromium"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SidharthAnand04/convsearch.git"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@playwright/test": "^1.62.0"
+  }
+}

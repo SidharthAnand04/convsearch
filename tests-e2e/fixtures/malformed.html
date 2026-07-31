@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Redesigned shell - ChatGPT</title>
+  </head>
+  <body>
+    <!--
+      A deliberately unfamiliar page shape: the URL still looks like a conversation, but
+      ChatGPT has (hypothetically) shipped a redesign. None of the contract's selectors
+      resolve to anything usable:
+        - no [data-message-author-role] anywhere, so every turn is unroleable
+        - one turn DOES carry the conversation-turn testid, exercising the "matched the
+          container selector but the turn is unusable" path rather than the trivial
+          "matched nothing" path
+        - text lives in elements with none of the expected hooks
+      Extraction must return null and must NOT throw.
+    -->
+    <div id="thread">
+      <section data-testid="conversation-turn-2">
+        <span class="msg-body">Where does the new markup put the author role?</span>
+      </section>
+      <section class="turn">
+        <span class="msg-body">Nowhere the old selectors can see it.</span>
+      </section>
+      <section data-testid="conversation-turn-3">
+        <!-- an element that looks right but is empty -->
+        <div class="markdown"></div>
+      </section>
+    </div>
+  </body>
+</html>

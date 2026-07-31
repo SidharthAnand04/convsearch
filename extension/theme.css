@@ -1,0 +1,134 @@
+/*
+ * convsearch — design tokens (single source of truth).
+ *
+ * Dark is the DEFAULT and carries the original editorial dark-purple identity
+ * verbatim under :root. A coherent LIGHT theme, derived from the same brand
+ * hues (--primary #9d8cec, --secondary #8e1884, --accent-cta #de3a90), lives
+ * under :root[data-theme="light"] with light surfaces/ink that keep AA-safe
+ * reading contrast. No @font-face, no network fonts (MV3 CSP + offline).
+ *
+ * The theme toggle in the header flips document.documentElement.dataset.theme;
+ * everything downstream is expressed through these tokens.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* 4px spacing rhythm */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+
+  /* type scale */
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-base: 13px;
+  --fs-md: 15px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 28px;
+
+  /* editorial tracking */
+  --track-eyebrow: 0.09em;
+  --track-tight: -0.015em;
+
+  /* radii — normalized to three steps */
+  --radius-sm: 4px;
+  --radius-md: 7px;
+  --radius-lg: 11px;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: "Segoe UI Semibold", "Segoe UI", system-ui, -apple-system, ui-sans-serif, sans-serif;
+
+  /* ── brand palette (exact, shared across themes) ─────────────
+   * Source-of-truth hues. Design-system tokens below derive from
+   * them so every hook keeps its long-standing name. */
+  --primary: #9d8cec;    /* links, active view, structure */
+  --secondary: #8e1884;  /* supporting accent — only in gradients with the CTA */
+  --accent-cta: #de3a90; /* the ONE primary CTA per surface — Ask + [n] citations */
+
+  /* dark ground */
+  --bg: #070417;
+  --bg-raised: #0e0a24;
+  --bg-sunken: #0b0720;
+  --border: rgba(157, 140, 236, 0.16);
+  --border-strong: rgba(157, 140, 236, 0.28);
+  --text: #e4dffb;
+  --text-muted: rgba(228, 223, 251, 0.82);
+  --text-faint: rgba(228, 223, 251, 0.66);
+
+  /* general accent = the primary lavender-violet */
+  --accent: var(--primary);
+  --accent-strong: #c1b4f7;
+  --accent-contrast: #070417;
+  --accent-soft: rgba(157, 140, 236, 0.14);
+
+  /* magenta CTA tints */
+  --cta-strong: #e86bab;
+  --cta-soft: rgba(222, 58, 144, 0.18);
+
+  /* dedicated focus ring — distinct from link/accent, high contrast */
+  --focus: #63e6ff;
+
+  --code-bg: #0b0720;
+  --shadow: 0 1px 2px -1px rgba(0, 0, 0, 0.6);
+  --shadow-raise: 0 1px 2px rgba(0, 0, 0, 0.5), 0 14px 34px -18px rgba(0, 0, 0, 0.75);
+
+  /* status — desaturated toward the purple world, still legible */
+  --ok: #6bd6a3;
+  --ok-soft: rgba(107, 214, 163, 0.15);
+  --warn: #e2b968;
+  --warn-soft: rgba(226, 185, 104, 0.15);
+  --bad: #f28893;
+  --bad-soft: rgba(242, 136, 147, 0.16);
+
+  --skeleton: #15112e;
+  --skeleton-sheen: #241d44;
+}
+
+/* ── LIGHT theme ─────────────────────────────────────────────
+ * Same brand hues, light lavender-tinted surfaces, dark ink.
+ * Link/CTA hues are darkened for AA contrast on light ground. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #f6f4fd;
+  --bg-raised: #ffffff;
+  --bg-sunken: #efeafa;
+  --border: rgba(74, 52, 148, 0.18);
+  --border-strong: rgba(74, 52, 148, 0.32);
+  --text: #1b1338;
+  --text-muted: rgba(27, 19, 56, 0.74);
+  --text-faint: rgba(27, 19, 56, 0.6);
+
+  /* darker violet so links/active clear AA on white */
+  --accent: #5a41c4;
+  --accent-strong: #47339e;
+  --accent-contrast: #ffffff;
+  --accent-soft: rgba(90, 65, 196, 0.12);
+
+  /* darker magenta CTA for AA with white text */
+  --accent-cta: #c62a7d;
+  --cta-strong: #ab2069;
+  --cta-soft: rgba(198, 42, 125, 0.12);
+
+  --focus: #0b63c4;
+
+  --code-bg: #efeafa;
+  --shadow: 0 1px 2px -1px rgba(30, 20, 60, 0.16);
+  --shadow-raise: 0 1px 2px rgba(30, 20, 60, 0.12), 0 14px 34px -18px rgba(30, 20, 60, 0.26);
+
+  --ok: #148a5c;
+  --ok-soft: rgba(20, 138, 92, 0.13);
+  --warn: #a56a12;
+  --warn-soft: rgba(165, 106, 18, 0.14);
+  --bad: #cf3446;
+  --bad-soft: rgba(207, 52, 70, 0.12);
+
+  --skeleton: #e7e0f6;
+  --skeleton-sheen: #f4effc;
+}

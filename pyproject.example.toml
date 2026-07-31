@@ -1,0 +1,85 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "convsearch"
+version = "0.1.0"
+description = "Local-first hierarchical conversation search and memory engine"
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+license = { text = "Apache-2.0" }
+dependencies = [
+  "numpy>=1.26,<3",
+  "platformdirs>=4,<5",
+  "pydantic>=2.13,<3",
+  "pydantic-settings>=2,<3",
+  "PyYAML>=6,<7",
+  "rapidfuzz>=3,<4",
+  "rich>=13,<15",
+  "typer>=0.26,<1",
+]
+
+[project.optional-dependencies]
+ml = [
+  "faiss-cpu>=1.14,<2",
+  "huggingface-hub>=0.30,<2",
+  "sentence-transformers>=3,<6",
+]
+graph = [
+  "networkx>=3,<4",
+]
+privacy = [
+  "detect-secrets>=1,<2",
+  "presidio-analyzer>=2,<3",
+  "presidio-anonymizer>=2,<3",
+]
+web = [
+  "fastapi[standard-no-fastapi-cloud-cli]>=0.138,<1",
+  "httpx>=0.28,<1",
+  "keyring>=25,<26",
+]
+openai = ["openai"]
+anthropic = ["anthropic"]
+gemini = ["google-genai"]
+ollama = ["ollama"]
+
+[project.scripts]
+convsearch = "convsearch.cli.app:app"
+
+[dependency-groups]
+dev = [
+  "mypy>=2,<3",
+  "pre-commit>=4,<5",
+  "pytest>=9,<10",
+  "pytest-cov>=7,<8",
+  "ruff>=0.11,<1",
+  "types-PyYAML>=6,<7",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/convsearch"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["convsearch"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# PyTorch is intentionally not pinned here because its correct distribution
+# depends on the host OS, CPU/CUDA choice, and CUDA version. Install it using
+# the current official PyTorch selector before enabling accelerated profiles.

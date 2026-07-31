@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 100" width="560" height="100" role="img" aria-label="convsearch">
+  <title>convsearch</title>
+  <!--
+    Mark + wordmark lockup. The mark is identical to assets/logo.svg
+    (same geometry, same porthole-mask technique) so the two always stay
+    in sync; the wordmark sits on a system font stack so it renders
+    without any embedded/external font file.
+
+    Colour: fill="currentColor" throughout - set the CSS `color` of a
+    parent element to theme the whole lockup for light or dark surfaces.
+    See assets/README.md for the recommended two-tone values.
+  -->
+  <defs>
+    <mask id="convsearch-wordmark-porthole" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+      <rect x="0" y="0" width="100" height="100" fill="#fff"/>
+      <circle cx="58" cy="58" r="17" fill="#000"/>
+    </mask>
+  </defs>
+
+  <g>
+    <rect x="9" y="9" width="58" height="58" rx="16" fill="currentColor" opacity="0.4"/>
+    <rect x="29" y="29" width="58" height="58" rx="16" fill="currentColor" mask="url(#convsearch-wordmark-porthole)"/>
+  </g>
+
+  <text
+    x="122"
+    y="66"
+    fill="currentColor"
+    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+    font-size="52"
+    font-weight="600"
+    letter-spacing="-0.5"
+  >convsearch</text>
+</svg>

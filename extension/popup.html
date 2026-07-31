@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>convsearch</title>
+  </head>
+  <body>
+    <header>
+      <form id="search-form">
+        <input
+          id="query"
+          type="search"
+          placeholder="Search your ChatGPT history…"
+          autocomplete="off"
+          spellcheck="false"
+          autofocus
+          role="combobox"
+          aria-expanded="false"
+          aria-autocomplete="list"
+          aria-controls="result-list"
+          aria-label="Search your ChatGPT history"
+        />
+        <button type="submit" id="submit">Search</button>
+        <button
+          type="button"
+          id="help-toggle"
+          class="icon-button"
+          aria-expanded="false"
+          aria-controls="help"
+          title="Keyboard shortcuts (? or Ctrl+/)"
+          aria-label="Keyboard shortcuts"
+        >
+          ?
+        </button>
+      </form>
+      <div class="controls">
+        <label><input type="checkbox" id="branches" /> include alternate branches</label>
+        <span id="status" class="status" role="status" aria-live="polite"></span>
+      </div>
+    </header>
+
+    <section id="help" class="help" hidden aria-label="Keyboard shortcuts">
+      <dl class="help-list">
+        <dt><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd></dt>
+        <dd>Open convsearch from anywhere (<kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> on macOS)</dd>
+
+        <dt><kbd>↑</kbd> <kbd>↓</kbd></dt>
+        <dd>Move through results</dd>
+
+        <dt><kbd>Ctrl</kbd>+<kbd>J</kbd> / <kbd>Ctrl</kbd>+<kbd>K</kbd></dt>
+        <dd>Move down / up without leaving the home row</dd>
+
+        <dt><kbd>Enter</kbd></dt>
+        <dd>Open the selected conversation (or search, if nothing is selected)</dd>
+
+        <dt><kbd>Shift</kbd>+<kbd>Enter</kbd></dt>
+        <dd>Open in a background tab and keep this popup open, so you can queue several</dd>
+
+        <dt><kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Enter</kbd></dt>
+        <dd>Same — open in a background tab</dd>
+
+        <dt><kbd>Home</kbd> / <kbd>End</kbd></dt>
+        <dd>First / last result</dd>
+
+        <dt><kbd>Esc</kbd></dt>
+        <dd>Clear the query; press again on an empty box to close the popup</dd>
+
+        <dt><kbd>/</kbd></dt>
+        <dd>Jump back to the search box</dd>
+
+        <dt><kbd>?</kbd> or <kbd>Ctrl</kbd>+<kbd>/</kbd></dt>
+        <dd>Show or hide this list</dd>
+      </dl>
+      <p class="help-foot">
+        Rebind the global shortcut at
+        <code>chrome://extensions/shortcuts</code>
+        <button type="button" id="edit-shortcuts" class="link">open</button>
+      </p>
+    </section>
+
+    <section id="capture" class="capture" hidden>
+      <div class="capture-line">
+        <span id="capture-dot" class="dot"></span>
+        <span id="capture-summary" class="capture-summary"></span>
+      </div>
+      <div id="capture-detail" class="capture-detail"></div>
+      <div id="capture-alert" class="capture-alert" hidden>
+        <span id="capture-alert-text"></span>
+        <button type="button" id="reindex">Rebuild index</button>
+      </div>
+    </section>
+
+    <main id="results">
+      <div id="result-list" role="listbox" aria-label="Search results"></div>
+    </main>
+
+    <footer>
+      <button type="button" id="open-panel" class="link">Open side panel</button>
+      <button type="button" id="refresh" class="link">Refresh status</button>
+      <button type="button" id="open-options" class="link">Settings</button>
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

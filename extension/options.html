@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>convsearch options</title>
+  </head>
+  <body class="options">
+    <h1>convsearch settings</h1>
+
+    <h2>Server address</h2>
+    <p>
+      The address of your local convsearch server. It must stay on 127.0.0.1 or localhost — the
+      extension only has permission to reach the loopback interface, so your conversations never
+      leave this machine.
+    </p>
+    <form id="options-form" class="row">
+      <input id="server-url" type="url" spellcheck="false" />
+      <button type="submit">Save</button>
+    </form>
+
+    <h2>Live capture</h2>
+    <p>
+      When capture is on, conversations you open on chatgpt.com are saved to your local
+      workspace as you read them, so they become searchable. Turn it off to browse without
+      recording anything new; conversations already captured are kept either way.
+    </p>
+    <label class="toggle">
+      <input type="checkbox" id="capture-enabled" />
+      Capture conversations while I browse chatgpt.com
+    </label>
+
+    <h2>Keyboard shortcut</h2>
+    <p>
+      <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> (<kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> on
+      macOS) opens convsearch from any tab. Chrome ignores the suggested chord if another
+      extension already claimed it, so if nothing happens, set your own at
+      <code>chrome://extensions/shortcuts</code>. Inside the popup, press
+      <kbd>Ctrl</kbd>+<kbd>/</kbd> for the full list of keys.
+    </p>
+    <button type="button" id="open-shortcuts">Open chrome://extensions/shortcuts</button>
+
+    <span id="status" class="status"></span>
+
+    <script src="options.js"></script>
+  </body>
+</html>

@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "convsearch — ChatGPT history search",
+  "version": "0.3.0",
+  "description": "Captures your ChatGPT conversations to a local index as you browse, and searches them offline.",
+  "permissions": ["storage", "tabs", "alarms", "sidePanel", "contextMenus", "nativeMessaging"],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*",
+    "https://chatgpt.com/*"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["capture.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "convsearch (Alt+Shift+K)",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+K",
+        "mac": "Alt+Shift+K"
+      }
+    }
+  },
+  "options_page": "options.html"
+}
