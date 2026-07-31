@@ -37,9 +37,9 @@
      labels, hairline rules, sharp corners, smooth scroll + restrained
      scroll-reveal. Reskinned to a dark-first purple system:
        --text #dad4f8 · --background #070417 · --primary #9d8cec
-       --secondary #8e1884 · --accent #de3a90
-     Primary purple drives links/buttons/focus; pink accent lights up
-     the hero highlight and key CTAs; magenta-purple supports.
+       --secondary #8e1884 · --accent-cta #de3a90
+     Lavender drives structure and ordinary interaction. Magenta is reserved
+     for the one primary install action.
      ============================================================ */
 
   :root {
@@ -76,16 +76,17 @@
 
   /* ---- Brand palette (exact base hex, exposed as custom properties) ----
        --text #dad4f8   --background #070417   --primary #9d8cec
-       --secondary #8e1884   --accent #de3a90                        ---- */
+       --secondary #8e1884   --accent-cta #de3a90                    ---- */
 
   /* ---- Dark theme (DEFAULT) — near-black indigo, lavender ink ---- */
   :root,
   :root[data-theme="dark"] {
-    --text: #dad4f8;
+    --text: #e4dffb;
     --background: #070417;
     --primary: #9d8cec;
     --secondary: #8e1884;
-    --accent: #de3a90;
+    --accent-cta: #de3a90;
+    --focus: #63e6ff;
 
     --paper: #070417;
     --panel: #141031;
@@ -110,7 +111,8 @@
     --background: #f5f3fb;
     --primary: #6f5bd6;
     --secondary: #8e1884;
-    --accent: #c81f7d;
+    --accent-cta: #c62a7d;
+    --focus: #0b63c4;
 
     --paper: #f5f3fb;
     --panel: #ffffff;
@@ -134,8 +136,9 @@
   /* Always-dark elevated panel (how-it-works, CTA), regardless of active theme */
   .invert {
     --primary: #b9abf5;
-    --secondary: #d38fce;
-    --accent: #f26fb0;
+    --secondary: #8e1884;
+    --accent-cta: #de3a90;
+    --focus: #63e6ff;
     --paper: #0b0722;
     --panel: #151134;
     --sunken: #0a0620;
@@ -188,7 +191,7 @@
 
   /* ---- focus ---- */
   :focus-visible {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--focus);
     outline-offset: 3px;
     border-radius: 0;
   }
@@ -256,12 +259,9 @@
     color: var(--ink);
     text-decoration: none;
     margin-right: auto;
-    background: linear-gradient(92deg, var(--primary), var(--accent));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--ink);
   }
-  .brand .mark { width: 22px; height: 22px; flex: none; color: var(--primary); -webkit-text-fill-color: var(--primary); }
+  .brand .mark { width: 22px; height: 22px; flex: none; color: var(--primary); }
 
   .site-nav { display: flex; align-items: center; gap: var(--sp-4); }
   .nav-links { display: flex; gap: var(--sp-4); }
@@ -311,14 +311,14 @@
   }
   .btn:hover { border-color: var(--ink); background: var(--ink); color: var(--paper); }
   .btn-primary {
-    background: linear-gradient(120deg, var(--primary), var(--accent));
+    background: linear-gradient(120deg, var(--accent-cta), var(--secondary));
     border-color: transparent;
-    color: var(--on-accent);
+    color: #fff;
     font-weight: 600;
     box-shadow: 0 0 0 1px rgba(157, 140, 236, 0.45), 0 8px 26px -10px rgba(222, 58, 144, 0.6);
   }
   .btn-primary:hover {
-    background: linear-gradient(120deg, var(--accent), var(--secondary));
+    background: linear-gradient(120deg, var(--secondary), var(--accent-cta));
     border-color: transparent;
     color: #fff;
     box-shadow: 0 0 0 1px rgba(222, 58, 144, 0.6), 0 12px 30px -8px rgba(222, 58, 144, 0.72);
@@ -375,11 +375,7 @@
   .hero h1 .thin { font-weight: 300; color: var(--muted); }
   .hero h1 em {
     font-style: normal;
-    background: linear-gradient(100deg, var(--primary) 0%, var(--accent) 52%, var(--secondary) 115%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
+    color: var(--primary);
   }
   .hero .tagline {
     font-size: var(--fs-md);
@@ -388,6 +384,10 @@
     line-height: 1.42;
   }
   .hero-actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-6); }
+  .hero-banner { margin: var(--sp-7) 0 0; border: 1px solid var(--line-2); background: var(--sunken); overflow: hidden; box-shadow: 0 28px 76px -42px rgba(157, 140, 236, 0.72); }
+  .hero-banner img { width: 100%; height: auto; display: block; }
+  .hero-banner figcaption { padding: var(--sp-3) var(--sp-4); color: var(--faint); font-size: var(--fs-sm); border-top: 1px solid var(--line); }
+  @media (forced-colors: active) { .hero-banner { box-shadow: none; } }
 
   .hero-facts {
     display: grid;
@@ -600,7 +600,7 @@
     background: var(--sunken);
     border: 1px solid var(--line-2);
     box-shadow: 0 0 0 1px var(--accent-soft),
-                0 26px 64px -28px rgba(222, 58, 144, 0.5);
+                0 26px 64px -28px rgba(157, 140, 236, 0.5);
     overflow: hidden;
   }
   .demo-video-wrap video {
@@ -628,7 +628,7 @@
     border: 1px solid var(--line-2);
     background: var(--sunken);
     box-shadow: 0 0 0 1px var(--accent-soft),
-                0 26px 64px -30px rgba(222, 58, 144, 0.5);
+                0 26px 64px -30px rgba(157, 140, 236, 0.5);
     overflow: hidden;
   }
   .gallery-gif-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -646,6 +646,7 @@
     color: var(--faint); margin: 0 0 var(--sp-4);
   }
   .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(20px, 3vw, 36px); }
+  .gallery-grid.launch { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .gallery-grid.portrait { grid-template-columns: repeat(2, minmax(0, 320px)); justify-content: center; }
   .shot { margin: 0; border: 1px solid var(--line-2); background: var(--panel); overflow: hidden; }
   .shot img { width: 100%; height: auto; display: block; background: var(--sunken); border-bottom: 1px solid var(--line); }
@@ -656,7 +657,7 @@
     letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600;
   }
   @media (max-width: 640px) {
-    .gallery-grid, .gallery-grid.portrait { grid-template-columns: 1fr; justify-content: stretch; }
+    .gallery-grid, .gallery-grid.portrait, .gallery-grid.launch { grid-template-columns: 1fr; justify-content: stretch; }
   }
 
   /* ---- Install ---- */
@@ -735,11 +736,7 @@
   /* ---- Forced-colors / high-contrast fallback ----
      Drop gradient text-clipping and glows so system colors win. */
   @media (forced-colors: active) {
-    .brand, .hero h1 em {
-      background: none;
-      color: CanvasText;
-      -webkit-text-fill-color: CanvasText;
-    }
+    .brand, .hero h1 em { color: CanvasText; }
     .btn-primary, .btn-primary:hover { box-shadow: none; }
     :focus-visible { outline: 2px solid CanvasText; }
   }
@@ -801,7 +798,7 @@
     <div class="wrap">
       <p class="eyebrow" data-reveal><span class="idx">extension v0.3</span> Local-first ChatGPT search + RAG</p>
       <h1 data-reveal>
-        Search your <em>own</em> ChatGPT history. <span class="thin">Answered with citations, on your machine.</span>
+        Your ChatGPT history, <em>finally searchable.</em> <span class="thin">Search, ask, and reason over it on your machine.</span>
       </h1>
       <p class="tagline" data-reveal>
         convsearch is a Chrome extension and a local Python server. The extension quietly
@@ -811,9 +808,15 @@
         leaves your machine.
       </p>
       <div class="hero-actions" data-reveal>
-        <a class="btn btn-primary" href="#install">Install convsearch</a>
+        <a class="btn" href="#gallery">See the side panel</a>
         <a class="btn" href="https://github.com/SidharthAnand04/convsearch" rel="noreferrer">View source</a>
       </div>
+
+      <figure class="hero-banner" data-reveal>
+        <img src="media/github-banner.png" width="1280" height="640" decoding="async"
+             alt="convsearch side panel beside the message: Search, ask, and reason over your own ChatGPT history.">
+        <figcaption>Local-first by construction: hybrid retrieval, cited answers, and a reason for every rank.</figcaption>
+      </figure>
 
       <div class="hero-facts" data-reveal>
         <div class="fact">
@@ -888,6 +891,32 @@
           the side panel in both themes, and the landing page. Every pixel here is rendered on a
           local machine talking to <code>127.0.0.1:8756</code>.
         </p>
+      </div>
+
+      <div class="gallery-group" data-reveal>
+        <h3>Launch gallery</h3>
+        <div class="gallery-grid launch">
+          <figure class="shot">
+            <img src="media/ph-gallery-01.png" width="1270" height="760" loading="lazy" decoding="async"
+                 alt="convsearch positioning screen showing local-first search, cited answers, explainable ranking, and structured memory in the Chrome side panel.">
+            <figcaption><strong>Your history, searchable</strong>A Chrome side panel and local engine turn the conversations you already have into a searchable working archive.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="media/ph-gallery-02.png" width="1270" height="760" loading="lazy" decoding="async"
+                 alt="convsearch search result with a visible Ranked because explanation and score breakdown for lexical, semantic, and final ranking signals.">
+            <figcaption><strong>Ranked because</strong>Every result can show the literal signals behind its position, so hybrid search stays inspectable instead of opaque.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="media/ph-gallery-03.png" width="1270" height="760" loading="lazy" decoding="async"
+                 alt="convsearch loopback-only architecture diagram showing the extension and local server communicating on the same machine without a cloud data path.">
+            <figcaption><strong>Loopback-only</strong>The extension talks to a local server on <code>127.0.0.1</code>; your history stays on your machine unless you opt into a cloud answer backend.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="media/ph-gallery-04.png" width="1270" height="760" loading="lazy" decoding="async"
+                 alt="convsearch Chrome side panel tour highlighting the left icon rail for search, plans, tasks, projects, timeline, memories, privacy, and status.">
+            <figcaption><strong>Side panel, not another tab</strong>The icon rail keeps search, projects, memory, privacy, and status beside the conversation you are reading.</figcaption>
+          </figure>
+        </div>
       </div>
 
       <div class="gallery-lead" data-reveal>
